@@ -1,0 +1,201 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------
+   Design tokens — THE single source of truth for colour.
+
+   Every colour on the site is defined here, once, as RGB channels.
+   tailwind.config.js references these with rgb(var(--x) / <alpha-value>)
+   so utilities like text-oat/55 keep working. No hex literal may appear
+   in the Tailwind config, in a component, or anywhere else — the guardrail
+   in scripts/check-css.mjs enforces that.
+
+   Values marked "observed" were read out of the reference sites' own
+   stylesheets: kyhorsepark.com (navy, gold, beige), riovistafarm.net
+   (green), usef.org (.text-rolex-green). See README.
+   ------------------------------------------------------------------ */
+:root {
+  /* Ground — near-black with a green cast, the way Rio Vista tints its black */
+  --ink: 11 22 17; /* #0B1611 */
+  --ink-soft: 16 31 24; /* #101F18 */
+
+  /* Dark green */
+  --pine: 16 97 74; /* #10614A */
+  --pine-deep: 12 51 40; /* #0C3328 */
+  --pine-soft: 16 126 99; /* #107E63 — observed, riovistafarm.net */
+  --pine-rolex: 0 96 57; /* #006039 — observed, usef.org */
+  --pine-lit: 61 174 139; /* #3DAE8B — legible green on the ink ground */
+
+  /* Navy */
+  --navy: 0 69 123; /* #00457B — observed, KYHP primary */
+  --navy-deep: 0 33 59; /* #00213B — observed, KYHP primary-hover */
+  --navy-panel: 20 32 46; /* #14202E — player chrome */
+
+  /* Cream */
+  --oat: 246 242 234; /* #F6F2EA */
+  --oat-dim: 241 234 224; /* #F1EAE0 — observed, KYHP neutral-2 */
+  --oat-deep: 221 211 198; /* #DDD3C6 — observed, hermes.com */
+
+  /* Gold — antique tack brass, not a metallic */
+  --brass: 198 166 111; /* #C6A66F — observed, KYHP accent */
+  --brass-dark: 154 128 86; /* #9A8056 — observed, KYHP accent-hover */
+  --brass-light: 217 190 139; /* #D9BE8B */
+  --brass-ink: 122 98 56; /* #7A6238 — small gold text on cream, 5.2:1 */
+
+  /* Hermès orange — the pop. ⚠ UNCONFIRMED hex, see NOTES.md */
+  --hermes: 243 112 33; /* #F37021 */
+  --hermes-dark: 216 92 19; /* #D85C13 */
+  --hermes-light: 255 143 77; /* #FF8F4D */
+  --hermes-ink: 178 71 11; /* #B2470B — orange text on cream, 4.95:1 */
+
+  --clay: 138 98 68; /* #8A6244 */
+  --sage: 160 195 191; /* #A0C3BF — observed, KYHP "winter" */
+}
+
+/* ------------------------------------------------------------------
+   Resets and base elements. Nothing component-specific below this line —
+   component styles live beside their components as *.module.css.
+   ------------------------------------------------------------------ */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background-color: rgb(var(--oat));
+  color: rgb(var(--ink));
+  font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html.dark body {
+  background-color: rgb(var(--ink));
+  color: rgb(var(--oat));
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--brass) / 0.45);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--brass) / 0.7);
+}
+
+/* ------------------------------------------------------------------
+   Global utilities — used across many components. Global keyframes carry
+   the aq- prefix so they can never collide with a module's.
+   ------------------------------------------------------------------ */
+.btn-hermes {
+  /* Dark label on the orange, not white: white on #F37021 is 2.89:1 and
+     fails WCAG AA; ink reaches 6.29:1 — and dark-on-orange is what Hermès
+     does on its own packaging. */
+  background: rgb(var(--hermes));
+  color: rgb(var(--ink));
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.btn-hermes:hover {
+  filter: brightness(0.94);
+}
+
+.btn-pine {
+  background: rgb(var(--pine));
+  color: rgb(var(--oat));
+  transition: filter 0.2s ease;
+}
+
+.btn-pine:hover {
+  filter: brightness(1.15);
+}
+
+/* A fine diagonal weave, like arena footing raked flat. */
+.bg-hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgb(var(--pine-deep) / 0.055) 0,
+    rgb(var(--pine-deep) / 0.055) 1px,
+    transparent 1px,
+    transparent 9px
+  );
+}
+
+html.dark .bg-hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgb(var(--brass) / 0.07) 0,
+    rgb(var(--brass) / 0.07) 1px,
+    transparent 1px,
+    transparent 9px
+  );
+}
+
+@keyframes aq-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: aq-rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes aq-pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.animate-pulse-dot {
+  animation: aq-pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .animate-pulse-dot {
+    animation: none;
+  }
+}

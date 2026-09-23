@@ -1,0 +1,55 @@
+{
+  "extends": "stylelint-config-standard",
+  "rules": {
+    "at-rule-no-unknown": [
+      true,
+      {
+        "ignoreAtRules": [
+          "tailwind",
+          "apply",
+          "layer",
+          "config"
+        ]
+      }
+    ],
+    "selector-class-pattern": [
+      "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      {
+        "message": "Global class names are kebab-case (selector-class-pattern)"
+      }
+    ],
+    "keyframes-name-pattern": [
+      "^aq-[a-z0-9-]+$",
+      {
+        "message": "Global @keyframes must be prefixed aq- so they cannot collide; module keyframes are exempt"
+      }
+    ],
+    "custom-property-pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+    "alpha-value-notation": "number",
+    "color-function-notation": "modern",
+    "selector-pseudo-class-no-unknown": [
+      true,
+      {
+        "ignorePseudoClasses": [
+          "global"
+        ]
+      }
+    ],
+    "declaration-empty-line-before": null,
+    "comment-empty-line-before": null,
+    "rule-empty-line-before": null,
+    "no-descending-specificity": null,
+    "custom-property-empty-line-before": null
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/*.module.css"
+      ],
+      "rules": {
+        "selector-class-pattern": "^[a-z][a-zA-Z0-9]*$",
+        "keyframes-name-pattern": "^[a-z][a-zA-Z0-9-]*$"
+      }
+    }
+  ]
+}

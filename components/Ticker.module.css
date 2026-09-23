@@ -1,0 +1,23 @@
+/* The keyframe name is scoped by the module, so it can never collide with a
+   global `marquee` the way Banner.css and global.css did in New-Frontend. */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.track {
+  display: inline-flex;
+  animation: marquee 38s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+  }
+}
