@@ -38,6 +38,7 @@ module.exports = {
           light: token('hermes-light'),
           ink: token('hermes-ink'),
         },
+        gold: token('gold'),
         clay: token('clay'),
         sage: token('sage'),
       },
