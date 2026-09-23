@@ -71,9 +71,10 @@ the one used during the build is in the session transcript and is easy to recrea
 ## Repo and deploy
 
 - Repo: `skyler-lark/Equestrian-Frontend`, **private**, pushed 2026-09-23. Neither of Sky's
-  GitHub accounts is a member of the Akture org (outside collaborator on New-Frontend only), so
-  the org repo has to be created or transferred by an org member — Aryan, who runs
-  New-Frontend. Push-then-transfer was Sky's call.
+  GitHub accounts is a member of the Akture org, so the path in (per Aryan, 09-23): Chris
+  Jacobi, who owns the org, invites `skyler-lark`; Sky then transfers the repo into `Akture`.
+  A first transfer went to the wrong handle and lapses on its own after 24 hours — GitHub has
+  no way to cancel one early.
 - Vercel: the project sits under Sky's `lark-labs` team; deploys are from the CLI on his
   machine. Don't connect the repo to that Vercel project — commits from anyone not on lark-labs
   would silently skip the build. When Akture takes it over, the project moves to their team.
