@@ -32,9 +32,8 @@ npm run build    # runs the guardrail first, then next build — same on Vercel
 | `/[barn]/support` | A form that opens a real email to `contact@akture.video` |
 
 **The demo barn** is code **`AA1111`**. Create an account with it on `/access` and you land on
-`/demo` with a day of mock footage and one purchase in My Videos. Aubrey Meadows carries the
-fuller worked example: an hour bought as four folders at
-`/aubreymeadows/covered/watch/aubreymeadows-covered-0916-1600`.
+`/demo` with two days of mock footage and an hour bought as four folders in My Videos, at
+`/demo/covered/watch/demo-covered-0916-1600`.
 
 ## The product, as built here
 

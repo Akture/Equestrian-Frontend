@@ -50,7 +50,7 @@ export default function MultiCamShowcase() {
             </div>
 
             <Link
-              href="/aubreymeadows/covered/watch/aubreymeadows-covered-0916-1600"
+              href="/demo/covered/watch/demo-covered-0916-1600"
               className="mt-10 inline-flex items-center gap-2 btn-hermes px-6 py-3 rounded-full font-label text-sm font-semibold shadow-hermes-md"
             >
               Open the player
