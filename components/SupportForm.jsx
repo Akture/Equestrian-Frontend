@@ -8,7 +8,7 @@ import { useState } from 'react';
 const TO = 'contact@akture.video';
 
 const topics = [
-  'My ride is missing from the arena page',
+  'My ride is missing from the barn page',
   'A purchase did not arrive',
   'A video will not play or download',
   'My barn code does not work',

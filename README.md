@@ -24,8 +24,8 @@ npm run build    # runs the guardrail first, then next build — same on Vercel
 | `/faq` | Eleven questions, including who can see footage and how long it stays |
 | `/barns` | The barns we are in, and how a barn comes online |
 | `/access` | Create account (email, password, barn code) or log in |
-| `/[barn]` | A barn's portal — one block per arena, "Find your ride" into each |
-| `/[barn]/[arena]` | **The purchase page.** Every 15-minute chunk from the last 48 hours, a date + time filter, select up to an hour in a row |
+| `/[barn]` | **The barn page is the purchase page** (one arena per barn, decided on the 10/4 call). Every 15-minute chunk from the last 48 hours, a date + time filter, select up to an hour in a row, then the camera rig |
+| `/[barn]/[arena]` | Redirects to `/[barn]#find-your-ride` — kept so old links and the player's breadcrumb still land |
 | `/[barn]/[arena]/watch/[folder]` | **The player.** Bought folders only — there is no preview |
 | `/[barn]/my-videos` | Purchases as folders of three angles: rename, delete, combine, play in order, download |
 | `/[barn]/profile` | The mock account, and log out |

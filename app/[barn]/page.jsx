@@ -1,11 +1,12 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Ticker from '@/components/Ticker';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Section from '@/components/Section';
+import ChunkBrowser from '@/components/ChunkBrowser';
 import DemoRibbon from '@/components/DemoRibbon';
 import { barns, cameraRig, getBarn } from '@/lib/barns';
+import { chunksForDay, days, purchasesForBarn } from '@/lib/rides';
 import { tickerLines } from '@/lib/copy';
 
 export function generateStaticParams() {
@@ -22,6 +23,12 @@ export default async function BarnPage({ params }) {
   const { barn: slug } = await params;
   const barn = getBarn(slug);
   if (!barn) notFound();
+
+  const { arena } = barn;
+  const chunksByDay = Object.fromEntries(days.map((d) => [d.key, chunksForDay(barn.slug, arena.slug, d.key)]));
+  const ownedIds = purchasesForBarn(barn.slug)
+    .filter((p) => p.arena === arena.slug)
+    .map((p) => p.id);
 
   return (
     <>
@@ -54,65 +61,31 @@ export default async function BarnPage({ params }) {
         </div>
       </section>
 
-      {/* The barn portal is a way into an arena. Choose the arena, then the day. */}
-      <Section tone="oat" className="py-20">
+      {/* The purchase page. One arena per barn for now, so the barn page goes
+          straight to the footage — no arena to choose first. */}
+      <section id="find-your-ride" className="py-20 bg-oat dark:bg-ink scroll-mt-28">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-10">
             <div>
               <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-4">
                 <span className="w-6 h-px bg-hermes" aria-hidden="true" />
-                Arenas
+                {arena.name} · {arena.dims} · {arena.surface}
               </p>
-              <h2 className="font-display text-[1.85rem] md:text-[2.3rem] leading-tight">
-                Open the arena you rode in
-              </h2>
+              <h2 className="font-display text-[1.85rem] md:text-[2.3rem] leading-tight">Find your ride</h2>
+              <p className="mt-4 text-ink/65 dark:text-oat/60 leading-relaxed max-w-lg">
+                Everything recorded in the {arena.name.toLowerCase()} in the last two days is listed
+                below in 15-minute chunks. Narrow it to the time you rode, select up to an hour in a
+                row, and buy it. Every camera in the arena comes with the purchase.
+              </p>
             </div>
             <DemoRibbon />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {barn.arenas.map((arena) => (
-              <Link
-                key={arena.slug}
-                href={`/${barn.slug}/${arena.slug}`}
-                className="group relative rounded-2xl overflow-hidden border border-ink/15 dark:border-oat/15 hover:border-hermes transition-colors"
-              >
-                <div className="relative h-56">
-                  <img
-                    src={arena.image}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background:
-                        'linear-gradient(0deg, rgba(8,17,13,0.92) 0%, rgba(8,17,13,0.55) 45%, rgba(8,17,13,0.22) 100%)',
-                    }}
-                  />
-
-                  <div className="absolute inset-x-0 bottom-0 p-6">
-                    <h3 className="font-display text-2xl text-oat">{arena.name}</h3>
-                    <p className="mt-1.5 text-oat/65 text-[0.86rem]">
-                      {arena.dims} · {arena.surface}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-pine-deep px-6 py-4 flex items-center justify-between">
-                  <span className="font-label text-[0.72rem] text-oat/65">{arena.use}</span>
-                  <span className="inline-flex items-center gap-2 font-label text-[0.8rem] font-semibold text-hermes-light group-hover:gap-3 transition-all">
-                    Find your ride
-                    <i className="ph-bold ph-arrow-right text-sm" />
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <ChunkBrowser barnSlug={barn.slug} arenaSlug={arena.slug} chunksByDay={chunksByDay} ownedIds={ownedIds} />
         </div>
-      </Section>
+      </section>
 
-      {/* What sits in each arena, in one line per camera. */}
+      {/* What sits in the arena, in one line per camera. */}
       <Section tone="pine" className="py-20">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-light mb-4">
@@ -120,7 +93,7 @@ export default async function BarnPage({ params }) {
             The cameras
           </p>
           <h2 className="font-display text-[1.85rem] md:text-[2.3rem] leading-tight text-oat max-w-xl">
-            The same cameras in every arena here
+            The cameras in this arena
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">

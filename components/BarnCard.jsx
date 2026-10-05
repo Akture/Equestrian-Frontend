@@ -34,9 +34,7 @@ export default function BarnCard({ barn }) {
         </div>
 
         <div className="mt-auto pt-6 flex items-center justify-between font-label text-[0.72rem] text-ink/65 dark:text-oat/55">
-          <span>
-            {barn.arenas.map((a) => a.name).join(' · ')}
-          </span>
+          <span>{barn.arena.name}</span>
           <span className="text-hermes-ink dark:text-hermes-light group-hover:translate-x-0.5 transition-transform">
             /{barn.slug} →
           </span>

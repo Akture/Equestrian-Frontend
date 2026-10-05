@@ -19,7 +19,6 @@ export default function Header({ barn = null }) {
   // On a barn page the nav points back into that barn rather than the shared site.
   const links = barn
     ? [
-        ...barn.arenas.map((a) => ({ label: a.name, href: `/${barn.slug}/${a.slug}` })),
         { label: 'My Videos', href: `/${barn.slug}/my-videos` },
         { label: 'Support', href: `/${barn.slug}/support` },
       ]

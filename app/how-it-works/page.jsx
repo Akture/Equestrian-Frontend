@@ -28,7 +28,7 @@ export default function HowItWorksPage() {
               From your barn’s code to your footage
             </h1>
             <p className="mt-6 text-ink/65 dark:text-oat/60 leading-relaxed">
-              You enter a code once. After that, finding a ride is picking an arena, a day, and
+              You enter a code once. After that, finding a ride is picking a day and
               the stretch of time you rode in.
             </p>
           </div>
