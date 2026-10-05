@@ -33,8 +33,10 @@ npm run build    # runs the guardrail first, then next build — same on Vercel
 
 **The demo barn** is code **`AA1111`**. Create an account with it on `/access` and you land on
 `/demo` with a day of mock footage and one purchase in My Videos. Aubrey Meadows carries the
-fuller worked example: an hour bought as four folders at
+fuller worked example: an hour bought as four folders plus a later purchase for autoplay at
 `/aubreymeadows/covered/watch/aubreymeadows-covered-0916-1600`.
+Seeded purchased folders use local sample MP4s from `public/videos/` to exercise playback and
+downloads; they stand in for the signed camera-angle URLs supplied by a production backend.
 
 ## The product, as built here
 
@@ -54,14 +56,15 @@ fuller worked example: an hour bought as four folders at
   | Files inside | `2026-09-16_1600-1615_CoveredArena_LongSide.mp4` · `…_GateEnd.mp4` · `…_FarEnd.mp4` |
 
 - **My Videos.** Purchases grouped by transaction. Rename (folder or file), delete, and combine
-  two to four consecutive folders work for real in the browser's storage. Download says plainly
-  it is not wired. Each folder shows the date it comes down; the exact retention is TBD.
-- **The player.** Custom, not a native `<video>` — the team's decision, because native controls
-  vanish in fullscreen. One shared transport, one playhead, one clock. Single angle or all three;
-  switching never moves the clock. Speed 0.25×–2×. **Play in order:** folders from one purchase
-  run back to back, with a strip under the timeline and a header that says *Playing 2 of 4 ·
-  next starts on its own.* Fullscreen takes the whole player. Keyboard: space · 1 2 3 · G · F ·
-  N P · ← → · , . · ?
+  two to four consecutive folders work for real in the browser's storage. Download all three
+  camera files or choose an individual angle. Each folder shows the date it comes down; the exact
+  retention is TBD.
+- **The player.** Custom controls over native `<video>` elements — native controls vanish in
+  fullscreen. One shared transport, one playhead, one clock. Single angle or all three;
+  switching never moves the clock. Playback starts when the user presses Play. Speed 0.25×–2×.
+  **Play in order:** folders from one purchase run back to back; an opt-in autoplay toggle below
+  the player continues into other recently purchased videos. Fullscreen takes the whole player.
+  Keyboard: space · 1 2 3 · G · F · N P · ← → · , . · ?
 - **Not V1, by decision:** trim and crop (download and edit elsewhere); marks on the timeline
   (still in the player as a demonstrated nice-to-have, off the marketing copy).
 
@@ -106,6 +109,8 @@ are dark text on the orange — white on `#F37021` is 2.89:1 and fails WCAG AA.
 - Access: wrong code refused, `AA1111` creates the account and lands on the demo barn.
 - Player: seek, angle switch holds the clock, play-through advances to the next folder, N/P,
   all-three buffering note.
+- Player preview: `/demo/my-videos` has a separate three-feed sample folder. It uses local clips
+  from `public/videos/`, not synchronized horse footage; real folders provide their own angle URLs.
 - My Videos: rename persists, combine produces the combined entry and zip name, delete removes.
 
 ## Stack

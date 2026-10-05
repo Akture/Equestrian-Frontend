@@ -2,37 +2,60 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { feeds } from '@/lib/media';
-import { activityProfile, formatClock, formatElapsed, parseClock } from '@/lib/clock';
+import { formatClock, formatElapsed, parseClock } from '@/lib/clock';
+import { videoFolderTitle } from '@/lib/rides';
+import VideoDownloadButton from './VideoDownloadButton';
 
 const SPEEDS = [0.25, 0.5, 1, 1.5, 2];
 
 // One shared transport, one playhead, one clock. No per-camera timeline and no
 // per-camera play button — that is the whole reason three feeds can be trusted
 // to be the same moment.
-export default function MultiCamPlayer({ session: initial, queue: queueProp, markers = [], onDemoAction }) {
+export default function MultiCamPlayer({
+  session: initial,
+  queue: queueProp,
+  recentlyPurchased = [],
+  autoPlayNext = false,
+  autoStart = false,
+  markers = [],
+  barnName,
+}) {
   // Play in order: every folder from the same purchase, back to back. When one
   // 15-minute folder ends the next starts on its own, and the header says so.
-  const queue = queueProp && queueProp.length ? queueProp : [initial];
+  const purchaseQueue = queueProp && queueProp.length ? queueProp : [initial];
+  const purchasedIds = new Set(purchaseQueue.map((item) => item.id));
+  const queue = [
+    ...purchaseQueue,
+    ...recentlyPurchased.filter((item) => !purchasedIds.has(item.id)),
+  ];
   const [cursor, setCursor] = useState(Math.max(0, queue.findIndex((q) => q.id === initial.id)));
   const session = queue[cursor] || initial;
-  const duration = session.minutes * 60;
+  const hasVideo = Boolean(session.videos && feeds.every((feed) => session.videos[feed.id]));
+  const sessionDuration = session.minutes * 60;
+  const [mediaDurations, setMediaDurations] = useState({});
+  const duration = hasVideo && feeds.every((feed) => mediaDurations[feed.id])
+    ? Math.min(...feeds.map((feed) => mediaDurations[feed.id]))
+    : sessionDuration;
   const windowStart = parseClock(session.start);
 
-  const [t, setT] = useState(duration * 0.32);
+  const [t, setT] = useState(() => (hasVideo ? 0 : sessionDuration * 0.32));
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
-  const [mode, setMode] = useState('single'); // 'single' | 'triptych'
   const [active, setActive] = useState('side');
-  const [audio, setAudio] = useState('side');
-  const [clockMode, setClockMode] = useState('wall'); // 'wall' | 'elapsed'
+  const [clockMode, setClockMode] = useState('elapsed'); // 'wall' | 'elapsed'
   const [userMarks, setUserMarks] = useState([]);
-  const [loop, setLoop] = useState(null); // { from, to }
-  const [showKeys, setShowKeys] = useState(false);
+  const [editingMark, setEditingMark] = useState(null);
+  const [markLabel, setMarkLabel] = useState('');
+  const [mediaMessage, setMediaMessage] = useState('');
 
   const rafRef = useRef(null);
   const lastRef = useRef(null);
   const stripRef = useRef(null);
   const rootRef = useRef(null);
+  const videoRefs = useRef({});
+  const previousSessionRef = useRef(session.id);
+  const resumeAfterLoadRef = useRef(false);
+  const lastSyncRef = useRef(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const tRef = useRef(0);
   const cursorRef = useRef(cursor);
@@ -43,11 +66,59 @@ export default function MultiCamPlayer({ session: initial, queue: queueProp, mar
     cursorRef.current = cursor;
   }, [cursor]);
 
-  const activity = useMemo(() => activityProfile(session.id), [session.id]);
+  useEffect(() => {
+    const sessionChanged = previousSessionRef.current !== session.id;
+    previousSessionRef.current = session.id;
+    if (sessionChanged) setMediaDurations({});
+    setMediaMessage('');
+    setT(hasVideo ? 0 : sessionDuration * 0.32);
+    try {
+      const stored = JSON.parse(localStorage.getItem(`aq-player-marks:${session.id}`) || '[]');
+      setUserMarks(Array.isArray(stored) ? stored : []);
+    } catch {
+      setUserMarks([]);
+    }
+  }, [session.id]);
+
+  useEffect(() => {
+    if (!hasVideo) return;
+    feeds.forEach((feed) => {
+      const video = videoRefs.current[feed.id];
+      if (video?.readyState >= 1 && Number.isFinite(video.duration)) {
+        setMediaDurations((current) => ({ ...current, [feed.id]: video.duration }));
+      }
+    });
+  }, [hasVideo, session.id]);
+
+  const videosReady = hasVideo && feeds.every((feed) => mediaDurations[feed.id] > 0);
+
+  useEffect(() => {
+    if (!videosReady || (!resumeAfterLoadRef.current && !autoStart)) return;
+    if (!feeds.every((feed) => videoRefs.current[feed.id]?.readyState >= 1)) return;
+    resumeAfterLoadRef.current = false;
+    const videos = feeds.map((feed) => videoRefs.current[feed.id]).filter(Boolean);
+    videos.forEach((video) => {
+      video.currentTime = 0;
+      video.playbackRate = speed;
+    });
+    Promise.all(videos.map((video) => video.play()))
+      .then(() => setPlaying(true))
+      .catch(() => {
+        setPlaying(false);
+        setMediaMessage('A camera could not start automatically. Press Play to retry.');
+      });
+  }, [videosReady, session.id, speed, autoStart]);
+
+  useEffect(() => {
+    if (autoStart && !hasVideo) setPlaying(true);
+  }, [autoStart, hasVideo, session.id]);
+
   const allMarks = useMemo(
-    () =>
-      [...markers.map((m) => ({ ...m, owner: 'seeded' })), ...userMarks].sort((a, b) => a.at - b.at),
-    [markers, userMarks]
+    () => [
+      ...markers.map((m) => ({ ...m, owner: 'seeded' })),
+      ...userMarks.map((m) => ({ ...m, at: duration ? m.seconds / duration : 0, kind: 'mine', owner: 'user' })),
+    ].sort((a, b) => a.at - b.at),
+    [markers, userMarks, duration]
   );
 
   // ---- the master clock -------------------------------------------------
@@ -61,14 +132,59 @@ export default function MultiCamPlayer({ session: initial, queue: queueProp, mar
       // Clamp the frame delta. requestAnimationFrame stops while the tab is
       // hidden, so without this the first frame back would advance the clock by
       // the whole time the tab was in the background.
+      if (hasVideo) {
+        const master = videoRefs.current[active];
+        if (master && now - lastSyncRef.current >= 350) {
+          let next = master.currentTime;
+          if (next >= duration) {
+            if (
+              cursorRef.current < queue.length - 1 &&
+              (cursorRef.current < purchaseQueue.length - 1 || autoPlayNext)
+            ) {
+              resumeAfterLoadRef.current = true;
+              cursorRef.current += 1;
+              setCursor(cursorRef.current);
+              tRef.current = 0;
+              setT(0);
+            } else {
+              tRef.current = duration;
+              setT(duration);
+              setPlaying(false);
+              feeds.forEach((feed) => {
+                const video = videoRefs.current[feed.id];
+                if (!video) return;
+                const end = Math.min(duration, video.duration || duration);
+                if (video.readyState >= 1 && Math.abs(video.currentTime - end) > 0.05) video.currentTime = end;
+                video.pause();
+              });
+            }
+            return;
+          }
+          feeds.forEach((feed) => {
+            const follower = videoRefs.current[feed.id];
+            if (!follower || follower === master || follower.readyState < 1) return;
+            if (Math.abs(follower.currentTime - next) > 0.35) follower.currentTime = next;
+            follower.playbackRate = speed;
+            if (follower.paused && !follower.ended) follower.play().catch(() => {});
+          });
+          lastSyncRef.current = now;
+          tRef.current = next;
+          setT(next);
+        }
+        rafRef.current = requestAnimationFrame(step);
+        return;
+      }
       const elapsed = Math.min((now - lastRef.current) / 1000, 0.25);
       const dt = elapsed * speed;
       lastRef.current = now;
-      let next = tRef.current + dt;
-      if (loop && next >= loop.to) next = loop.from;
+      const next = tRef.current + dt;
       if (next >= duration) {
-        if (cursorRef.current < queue.length - 1) {
+        if (
+          cursorRef.current < queue.length - 1 &&
+          (cursorRef.current < purchaseQueue.length - 1 || autoPlayNext)
+        ) {
           // end of this folder — the next one starts on its own
+          resumeAfterLoadRef.current = true;
           cursorRef.current += 1;
           setCursor(cursorRef.current);
           tRef.current = 0;
@@ -87,25 +203,32 @@ export default function MultiCamPlayer({ session: initial, queue: queueProp, mar
     };
     rafRef.current = requestAnimationFrame(step);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [playing, speed, duration, loop, queue.length]);
+  }, [playing, speed, duration, queue.length, purchaseQueue.length, hasVideo, active, autoPlayNext]);
 
-  const seek = useCallback(
-    (seconds) => setT(Math.min(duration, Math.max(0, seconds))),
-    [duration]
-  );
+  const seek = useCallback((seconds) => {
+    const next = Math.min(duration, Math.max(0, seconds));
+    tRef.current = next;
+    setT(next);
+    if (hasVideo) {
+      feeds.forEach((feed) => {
+        const video = videoRefs.current[feed.id];
+        if (video && video.readyState >= 1) video.currentTime = Math.min(next, video.duration || next);
+      });
+    }
+  }, [duration, hasVideo]);
 
-  const nudge = useCallback((delta) => setT((p) => Math.min(duration, Math.max(0, p + delta))), [duration]);
+  const nudge = useCallback((delta) => seek(tRef.current + delta), [seek]);
 
   const goToFolder = useCallback(
     (i) => {
-      if (i < 0 || i >= queue.length) return;
+      if (i < 0 || i >= queue.length || (i >= purchaseQueue.length && !autoPlayNext)) return;
+      resumeAfterLoadRef.current = playing;
       cursorRef.current = i;
       setCursor(i);
       tRef.current = 0;
       setT(0);
-      setLoop(null);
     },
-    [queue.length]
+    [queue.length, purchaseQueue.length, autoPlayNext, playing]
   );
 
   // Fullscreen takes the whole player — stage, rail and transport — because a
@@ -130,83 +253,101 @@ export default function MultiCamPlayer({ session: initial, queue: queueProp, mar
   // Switching angles never moves the clock and never restarts playback.
   const promote = useCallback((id) => {
     setActive(id);
-    setAudio(id);
-    setMode('single');
   }, []);
 
-  // ---- keyboard ---------------------------------------------------------
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      const k = e.key;
-      if (k === ' ') {
-        e.preventDefault();
-        setPlaying((p) => !p);
-      } else if (k === '1' || k === '2' || k === '3') {
-        promote(feeds[Number(k) - 1].id);
-      } else if (k === 'g' || k === 'G') {
-        setMode((m) => (m === 'single' ? 'triptych' : 'single'));
-      } else if (k === 'ArrowLeft') {
-        nudge(e.shiftKey ? -10 : -1);
-      } else if (k === 'ArrowRight') {
-        nudge(e.shiftKey ? 10 : 1);
-      } else if (k === ',') {
-        nudge(-1 / 30);
-      } else if (k === '.') {
-        nudge(1 / 30);
-      } else if (k === 'f' || k === 'F') {
-        toggleFullscreen();
-      } else if (k === 'n' || k === 'N') {
-        goToFolder(cursorRef.current + 1);
-      } else if (k === 'p' || k === 'P') {
-        goToFolder(cursorRef.current - 1);
-      } else if (k === '?') {
-        setShowKeys((v) => !v);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [nudge, promote, toggleFullscreen, goToFolder]);
+  const togglePlayback = useCallback(() => {
+    resumeAfterLoadRef.current = false;
+    if (!hasVideo) {
+      setPlaying((value) => !value);
+      return;
+    }
+    if (playing) {
+      feeds.forEach((feed) => videoRefs.current[feed.id]?.pause());
+      setPlaying(false);
+      return;
+    }
+    const videos = feeds.map((feed) => videoRefs.current[feed.id]).filter(Boolean);
+    Promise.all(videos.map((video) => video.play()))
+      .then(() => {
+        videos.forEach((video) => { video.playbackRate = speed; });
+        setPlaying(true);
+        setMediaMessage('');
+      })
+      .catch(() => {
+        setPlaying(false);
+        setMediaMessage('A camera could not play. Check the connection and press Play to retry.');
+      });
+  }, [hasVideo, playing, speed]);
+
+  function updateUserMarks(next) {
+    setUserMarks(next);
+    try {
+      localStorage.setItem(`aq-player-marks:${session.id}`, JSON.stringify(next));
+    } catch {
+      setMediaMessage('This browser could not save timestamps.');
+    }
+  }
 
   const pct = duration ? t / duration : 0;
   const activeFeed = feeds.find((f) => f.id === active) || feeds[0];
+  const deckFeeds = [activeFeed, ...feeds.filter((feed) => feed.id !== activeFeed.id)];
 
   const timeLabel =
     clockMode === 'wall'
       ? formatClock(windowStart + t, true)
       : `${formatElapsed(t)} / ${formatElapsed(duration)}`;
+  const sessionTitle = videoFolderTitle(barnName || session.barnName || '', session);
 
   function addMark() {
-    setUserMarks((prev) => [...prev, { at: pct, label: 'My ride', kind: 'mine' }]);
+    const seconds = hasVideo ? videoRefs.current[active]?.currentTime ?? t : t;
+    const mark = { id: `${Date.now()}`, seconds, label: `Timestamp ${userMarks.length + 1}` };
+    tRef.current = seconds;
+    setT(seconds);
+    updateUserMarks([...userMarks, mark]);
+    setEditingMark(mark.id);
+    setMarkLabel(mark.label);
+  }
+
+  function saveMarkLabel(e) {
+    e.preventDefault();
+    updateUserMarks(userMarks.map((mark) => mark.id === editingMark ? { ...mark, label: markLabel.trim() || mark.label } : mark));
+    setEditingMark(null);
+  }
+
+  function deleteMark(id) {
+    updateUserMarks(userMarks.filter((mark) => mark.id !== id));
+    if (editingMark === id) setEditingMark(null);
   }
 
   function onStripClick(e) {
-    const rect = stripRef.current.getBoundingClientRect();
+    const rect = stripRef.current?.getBoundingClientRect();
+    if (!rect) return;
     seek(((e.clientX - rect.left) / rect.width) * duration);
   }
 
   return (
     <div
       ref={rootRef}
-      className={`bg-ink text-oat border border-brass/20 overflow-hidden shadow-rail ${
-        isFullscreen ? 'rounded-none overflow-y-auto p-4 md:p-8' : 'rounded-2xl'
+      className={`bg-ink text-oat border border-brass/20 overflow-hidden shadow-rail flex flex-col ${
+        isFullscreen
+          ? 'h-[100svh] rounded-none p-3 md:p-5'
+          : 'h-[min(88svh,960px)] min-h-[560px] rounded-2xl lg:h-[min(960px,88svh)] lg:min-h-[650px]'
       }`}
     >
       {/* -- context bar ---------------------------------------------------- */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 md:px-6 py-3 border-b border-brass/15 bg-navy-panel/60">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="font-label text-[0.62rem] uppercase tracking-[0.2em] text-hermes-light whitespace-nowrap">
-            {session.arenaName}
+          <span
+            className="min-w-0 truncate font-label text-[0.72rem] uppercase tracking-[0.1em] text-hermes-light"
+            title={sessionTitle}
+          >
+            {sessionTitle}
           </span>
-          <span className="w-px h-4 bg-oat/15" aria-hidden="true" />
-          <span className="text-[0.78rem] text-oat/70 truncate tabular-nums">
-            {session.dateLabel} · {session.start}–{session.end}
-          </span>
-          {queue.length > 1 && (
+          {(purchaseQueue.length > 1 || (autoPlayNext && queue.length > 1)) && (
             <>
               <span className="w-px h-4 bg-oat/15" aria-hidden="true" />
               <span className="text-[0.78rem] text-hermes-light whitespace-nowrap">
-                Playing {cursor + 1} of {queue.length}
+                Playing {cursor + 1} of {autoPlayNext ? queue.length : purchaseQueue.length}
                 <span className="text-oat/55"> · next starts on its own</span>
               </span>
             </>
@@ -215,53 +356,150 @@ export default function MultiCamPlayer({ session: initial, queue: queueProp, mar
         <SyncChip />
       </div>
 
-      {mode === 'single' ? (
-        <div className="p-3 md:p-4 grid grid-cols-1 xl:grid-cols-[1fr_248px] gap-3 md:gap-4">
-          <Stage feed={activeFeed} timeLabel={timeLabel} playing={playing} />
-          <div className="grid grid-cols-3 xl:grid-cols-1 gap-3">
-            {feeds.map((f) => (
-              <RailTile
-                key={f.id}
-                feed={f}
-                isActive={f.id === active}
-                hasAudio={f.id === audio}
-                onClick={() => promote(f.id)}
-              />
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="p-3 md:p-4 space-y-3">
-          {/* The 180° side view is the one framing that earns full width. */}
-          <Stage feed={feeds[0]} timeLabel={timeLabel} playing={playing} onClick={() => promote('side')} />
-          <div className="grid grid-cols-2 gap-3">
-            {feeds.slice(1).map((f) => (
-              <Stage key={f.id} feed={f} compact playing={playing} onClick={() => promote(f.id)} />
-            ))}
-          </div>
-        </div>
+      {mediaMessage && (
+        <p className="px-4 py-2 text-[0.78rem] text-hermes-light" role="status">{mediaMessage}</p>
       )}
+      {hasVideo && !videosReady && !mediaMessage && (
+        <p className="px-4 py-2 text-[0.78rem] text-oat/60" role="status">Loading all three camera clips…</p>
+      )}
+
+      <div className={`grid flex-1 min-h-0 grid-cols-2 gap-2 p-2 md:gap-3 md:p-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] ${
+        isFullscreen ? 'grid-rows-[minmax(0,1fr)]' : 'grid-rows-[minmax(0,1fr)_clamp(4rem,12svh,7rem)] md:grid-rows-2'
+      }`}>
+        {deckFeeds.map((feed, index) => {
+          const isActive = feed.id === active;
+          const isHidden = isFullscreen && !isActive;
+          const placement = isFullscreen
+            ? 'col-span-2 row-span-1'
+            : isActive
+              ? 'col-span-2 row-start-1 md:col-span-1 md:row-span-2'
+              : `col-span-1 row-start-2 ${index === 1 ? 'col-start-1 md:col-start-2 md:row-start-1' : 'col-start-2 md:col-start-2 md:row-start-2'}`;
+          return (
+            <div
+              key={feed.id}
+              onClick={!isActive ? () => promote(feed.id) : undefined}
+              onKeyDown={!isActive ? (e) => (e.key === 'Enter' || e.key === ' ') && promote(feed.id) : undefined}
+              role={!isActive ? 'button' : undefined}
+              tabIndex={!isActive ? 0 : undefined}
+              aria-label={!isActive ? `Show only the ${feed.label} camera` : undefined}
+              className={`relative min-h-0 h-full rounded-xl overflow-hidden border border-brass/20 bg-navy-deep ${placement} ${
+                isHidden ? 'hidden' : ''
+              } ${!isActive ? 'cursor-pointer hover:border-hermes/70' : ''}`}
+            >
+              {hasVideo ? (
+                <video
+                  ref={(element) => { if (element) videoRefs.current[feed.id] = element; }}
+                  src={session.videos[feed.id]}
+                  poster={feed.poster}
+                  preload="auto"
+                  muted
+                  playsInline
+                  onLoadedMetadata={(e) => {
+                    const { duration: videoDuration } = e.currentTarget;
+                    if (Number.isFinite(videoDuration)) {
+                      setMediaDurations((current) => ({ ...current, [feed.id]: videoDuration }));
+                    }
+                  }}
+                  onError={() => setMediaMessage(`${feed.label} could not load. Check the connection and retry.`)}
+                  className="absolute inset-0 w-full h-full object-contain"
+                />
+              ) : (
+                <img src={feed.poster} alt="" className="absolute inset-0 w-full h-full object-contain" />
+              )}
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-ink/45 via-transparent to-ink/20" />
+              <span className="absolute top-3 left-3 inline-flex items-center gap-2 rounded-full bg-ink/70 backdrop-blur-sm px-2.5 py-1 font-label text-[0.62rem] uppercase tracking-[0.16em] text-oat/85">
+                {feed.label} · {feed.angle}
+              </span>
+              <span className="absolute bottom-3 right-3 rounded-full bg-ink/70 px-2.5 py-1 font-label text-[0.62rem] tabular-nums text-oat/85">
+                {feed.resolution}
+              </span>
+              {isActive && (
+                <span className="absolute top-3 right-3 rounded-full bg-ink/70 backdrop-blur-sm px-2.5 py-1 font-label text-[0.68rem] tabular-nums text-oat/85">
+                  {timeLabel}
+                </span>
+              )}
+              {isActive && !playing && (
+                <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="w-16 h-16 rounded-full bg-ink/55 backdrop-blur-sm border border-oat/20 flex items-center justify-center">
+                    <i className="ph-fill ph-play text-2xl text-oat/90 ml-0.5" />
+                  </span>
+                </span>
+              )}
+              {isFullscreen && isActive && (
+                <div className="absolute inset-y-0 inset-x-3 flex items-center justify-between pointer-events-none">
+                  <button
+                    type="button"
+                    aria-label="Previous camera angle"
+                    onClick={(e) => { e.stopPropagation(); promote(feeds[(feeds.findIndex((item) => item.id === active) + feeds.length - 1) % feeds.length].id); }}
+                    className="w-10 h-10 rounded-full bg-ink/70 text-oat flex items-center justify-center pointer-events-auto"
+                  >
+                    <i className="ph-bold ph-caret-left" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Next camera angle"
+                    onClick={(e) => { e.stopPropagation(); promote(feeds[(feeds.findIndex((item) => item.id === active) + 1) % feeds.length].id); }}
+                    className="w-10 h-10 rounded-full bg-ink/70 text-oat flex items-center justify-center pointer-events-auto"
+                  >
+                    <i className="ph-bold ph-caret-right" />
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       {/* -- transport ------------------------------------------------------ */}
       <div className="px-3 md:px-6 pb-5 pt-1">
-        {/* jump-to chips, seeded from the barn schedule and activity spikes */}
-        <div className="flex flex-wrap items-center gap-2 mb-3">
+        {/* jump-to chips, seeded from the barn schedule */}
+        <div className="flex flex-nowrap items-center gap-2 mb-2 overflow-x-auto">
           <span className="font-label text-[0.6rem] uppercase tracking-[0.18em] text-oat/55 mr-1">
             Jump to
           </span>
           {allMarks.map((m, i) => (
-            <button
-              key={`${m.label}-${i}`}
-              type="button"
-              onClick={() => seek(m.at * duration)}
-              className={`px-2.5 py-1 rounded-full text-[0.68rem] border transition-colors ${
-                m.kind === 'mine'
-                  ? 'border-hermes/50 text-hermes hover:bg-hermes/10'
-                  : 'border-oat/15 text-oat/60 hover:border-hermes hover:text-hermes-light'
-              }`}
-            >
-              {formatClock(windowStart + m.at * duration)} · {m.label}
-            </button>
+            <div key={m.id || `${m.label}-${i}`} className="inline-flex items-center rounded-full border border-oat/15 overflow-hidden text-[0.68rem]">
+              {editingMark === m.id ? (
+                <form onSubmit={saveMarkLabel} className="inline-flex items-center gap-1 p-1">
+                  <input
+                    autoFocus
+                    value={markLabel}
+                    onChange={(e) => setMarkLabel(e.target.value)}
+                    aria-label="Timestamp name"
+                    className="w-28 bg-transparent px-1 text-oat focus:outline-none"
+                  />
+                  <button type="submit" className="px-2 py-1 text-hermes-light">Save</button>
+                </form>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => seek(m.at * duration)}
+                    className={`px-2.5 py-1 transition-colors ${m.owner === 'user' ? 'text-hermes hover:bg-hermes/10' : 'text-oat/60 hover:text-hermes-light'}`}
+                  >
+                    {formatClock(windowStart + m.at * duration)} · {m.label}
+                  </button>
+                  {m.owner === 'user' && (
+                    <>
+                      <button
+                        type="button"
+                        aria-label={`Rename ${m.label}`}
+                        title="Rename timestamp"
+                        onClick={() => { setEditingMark(m.id); setMarkLabel(m.label); }}
+                        className="px-1.5 py-1 text-oat/50 hover:text-hermes-light"
+                      ><i className="ph-bold ph-pencil-simple" /></button>
+                      <button
+                        type="button"
+                        aria-label={`Delete ${m.label}`}
+                        title="Delete timestamp"
+                        onClick={() => deleteMark(m.id)}
+                        className="px-1.5 py-1 pr-2.5 text-oat/50 hover:text-hermes-light"
+                      ><i className="ph-bold ph-x" /></button>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
           ))}
         </div>
 
@@ -269,33 +507,10 @@ export default function MultiCamPlayer({ session: initial, queue: queueProp, mar
         <div
           ref={stripRef}
           onClick={onStripClick}
-          className="relative h-14 cursor-pointer select-none"
+          className="relative h-11 cursor-pointer select-none"
           role="presentation"
         >
-          <div className="absolute inset-x-0 top-0 h-9 flex items-end gap-px">
-            {activity.map((v, i) => (
-              <span
-                key={i}
-                className="flex-1 rounded-t-[1px]"
-                style={{
-                  height: `${v * 100}%`,
-                  // Longhand, not the `background` shorthand — React expands the
-                  // shorthand on the client and reports a false hydration diff.
-                  backgroundColor:
-                    i / activity.length <= pct ? 'rgba(198,166,111,0.55)' : 'rgba(246,242,234,0.13)',
-                }}
-              />
-            ))}
-          </div>
-
-          {loop && (
-            <div
-              className="absolute top-0 h-9 bg-hermes/20 border-x border-hermes/60 pointer-events-none"
-              style={{ left: `${loop.from * 100}%`, width: `${(loop.to - loop.from) * 100}%` }}
-            />
-          )}
-
-          <div className="absolute inset-x-0 top-9 h-1.5 rounded-full bg-oat/15 overflow-hidden">
+          <div className="absolute inset-x-0 top-2 h-1.5 rounded-full bg-oat/15 overflow-hidden">
             <div className="h-full bg-brass/60" style={{ width: `${pct * 100}%` }} />
           </div>
 
@@ -303,7 +518,7 @@ export default function MultiCamPlayer({ session: initial, queue: queueProp, mar
             <span
               key={`pin-${i}`}
               title={m.label}
-              className={`absolute top-[30px] w-[3px] h-4 rounded-full pointer-events-none ${
+              className={`absolute top-0 w-[3px] h-5 rounded-full pointer-events-none ${
                 m.kind === 'mine' ? 'bg-hermes' : 'bg-brass'
               }`}
               style={{ left: `${m.at * 100}%` }}
@@ -311,21 +526,21 @@ export default function MultiCamPlayer({ session: initial, queue: queueProp, mar
           ))}
 
           <span
-            className="absolute top-[26px] -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-hermes border-2 border-oat pointer-events-none"
+            className="absolute top-0 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-hermes border-2 border-oat pointer-events-none"
             style={{ left: `${pct * 100}%`, boxShadow: '0 0 0 4px rgba(243,112,33,0.2)' }}
           />
 
           <div className="absolute inset-x-0 bottom-0 flex justify-between font-label text-[0.6rem] text-oat/55 tabular-nums">
-            <span>{formatClock(windowStart)}</span>
-            <span>{formatClock(windowStart + duration * 0.5)}</span>
-            <span>{formatClock(windowStart + duration)}</span>
+            <span>{clockMode === 'wall' ? formatClock(windowStart) : formatElapsed(0)}</span>
+            <span>{clockMode === 'wall' ? formatClock(windowStart + duration * 0.5) : formatElapsed(duration * 0.5)}</span>
+            <span>{clockMode === 'wall' ? formatClock(windowStart + duration) : formatElapsed(duration)}</span>
           </div>
         </div>
 
         {queue.length > 1 && (
-          <ol className="mt-3 flex gap-1.5" aria-label="Folders in this purchase, in order">
-            {queue.map((q, i) => (
-              <li key={q.id} className="flex-1">
+          <ol className="mt-3 flex flex-wrap gap-1.5" aria-label="Folders in this purchase, in order">
+            {purchaseQueue.map((q, i) => (
+              <li key={q.id} className="min-w-[105px] flex-1">
                 <button
                   type="button"
                   onClick={() => goToFolder(i)}
@@ -351,12 +566,12 @@ export default function MultiCamPlayer({ session: initial, queue: queueProp, mar
         )}
 
         {/* controls */}
-        <div className="mt-4 flex flex-wrap items-center gap-2 md:gap-3">
+        <div className="mt-2 flex flex-wrap lg:flex-nowrap items-center gap-1.5 md:gap-2">
           <div className="flex items-center gap-1.5">
             <Ctl label="Back 10 seconds" icon="ph-bold ph-arrow-counter-clockwise" onClick={() => nudge(-10)} />
             <button
               type="button"
-              onClick={() => setPlaying((p) => !p)}
+              onClick={togglePlayback}
               aria-label={playing ? 'Pause' : 'Play'}
               className="w-11 h-11 rounded-full btn-hermes flex items-center justify-center shadow-hermes-sm"
             >
@@ -376,31 +591,16 @@ export default function MultiCamPlayer({ session: initial, queue: queueProp, mar
             {timeLabel}
           </button>
 
-          {/* mode toggle */}
-          <div
-            className="flex rounded-full border border-oat/15 overflow-hidden ml-auto"
-            title="All three keeps every camera running so switching picks up mid-ride — about three times the data, and slower networks will buffer."
-          >
-            {[
-              { id: 'single', label: 'Single' },
-              { id: 'triptych', label: 'All three' },
-            ].map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => setMode(m.id)}
-                className={`px-3.5 py-1.5 font-label text-[0.72rem] transition-colors ${
-                  mode === m.id ? 'bg-oat/15 text-oat' : 'text-oat/55 hover:text-oat/80'
-                }`}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
-
           <select
             value={speed}
-            onChange={(e) => setSpeed(Number(e.target.value))}
+            onChange={(e) => {
+              const nextSpeed = Number(e.target.value);
+              setSpeed(nextSpeed);
+              feeds.forEach((feed) => {
+                const video = videoRefs.current[feed.id];
+                if (video) video.playbackRate = nextSpeed;
+              });
+            }}
             aria-label="Playback speed"
             className="bg-transparent border border-oat/15 rounded-full px-3 py-1.5 font-label text-[0.72rem] text-oat/80 focus:outline-none focus:border-hermes"
           >
@@ -413,68 +613,26 @@ export default function MultiCamPlayer({ session: initial, queue: queueProp, mar
 
           <button
             type="button"
-            onClick={() =>
-              setLoop((l) =>
-                l ? null : { from: Math.max(0, pct - 0.02), to: Math.min(1, pct + 0.03) }
-              )
-            }
-            className={`px-3 py-1.5 rounded-full border font-label text-[0.72rem] transition-colors ${
-              loop ? 'border-hermes/60 text-hermes' : 'border-oat/15 text-oat/70 hover:border-hermes'
-            }`}
-            title="Loop a few seconds around the playhead — the distance, over and over"
-          >
-            <i className="ph-bold ph-repeat mr-1.5" />
-            {loop ? 'Looping' : 'Loop distance'}
-          </button>
-
-          <button
-            type="button"
             onClick={addMark}
             className="px-3 py-1.5 rounded-full border border-oat/15 text-oat/70 hover:border-hermes hover:text-hermes-light font-label text-[0.72rem] transition-colors"
           >
             <i className="ph-bold ph-map-pin mr-1.5" />
-            Mark my ride
+            Add timestamp
           </button>
 
-          <Ctl label="Download" icon="ph-bold ph-download-simple" onClick={() => onDemoAction?.('Download')} />
-          <Ctl label="Share" icon="ph-bold ph-share-network" onClick={() => onDemoAction?.('Share')} />
+          <VideoDownloadButton
+            folder={session}
+            buttonLabel="Download"
+            buttonClassName="w-9 h-9 rounded-full border border-oat/15 text-oat/70 hover:text-hermes-light hover:border-hermes flex items-center justify-center transition-colors"
+          >
+            <i className="ph-bold ph-download-simple text-sm" />
+          </VideoDownloadButton>
           <Ctl
             label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
             icon={isFullscreen ? 'ph-bold ph-corners-in' : 'ph-bold ph-corners-out'}
             onClick={toggleFullscreen}
           />
-          <Ctl label="Keyboard shortcuts" icon="ph-bold ph-keyboard" onClick={() => setShowKeys((v) => !v)} />
         </div>
-
-        {mode === 'triptych' && (
-          <p className="mt-3 font-label text-[0.72rem] text-oat/55 leading-relaxed">
-            <i className="ph-bold ph-wifi-medium mr-1.5 text-brass" />
-            All three keeps every camera running so switching picks up mid-ride. That is about three
-            times the data of a single view, and slower networks will buffer.
-          </p>
-        )}
-
-        {showKeys && (
-          <div className="mt-4 rounded-xl border border-oat/15 bg-navy-panel/50 p-4 grid grid-cols-2 sm:grid-cols-3 gap-y-2 gap-x-6 text-[0.75rem] text-oat/65 animate-rise">
-            {[
-              ['Space', 'Play / pause'],
-              ['1 · 2 · 3', 'Long side · In gate · Far end'],
-              ['G', 'Single / all three'],
-              ['← →', 'One second'],
-              ['⇧ ← →', 'Ten seconds'],
-              [', .', 'One frame'],
-              ['F', 'Fullscreen'],
-              ['N · P', 'Next / previous folder'],
-            ].map(([k, v]) => (
-              <div key={k} className="flex items-center gap-3">
-                <kbd className="font-label text-[0.68rem] px-1.5 py-0.5 rounded border border-oat/20 text-oat/80">
-                  {k}
-                </kbd>
-                <span>{v}</span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -493,7 +651,7 @@ function Stage({ feed, timeLabel, compact = false, playing, onClick }) {
       }`}
       style={{ aspectRatio: '16 / 9' }}
     >
-      <img src={feed.poster} alt="" className="w-full h-full object-cover" />
+      <img src={feed.poster} alt="" className="w-full h-full object-contain" />
       <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-ink/35" />
 
       <span className="absolute top-3 left-3 inline-flex items-center gap-2 rounded-full bg-ink/70 backdrop-blur-sm px-2.5 py-1 font-label text-[0.62rem] uppercase tracking-[0.16em] text-oat/85">
@@ -529,7 +687,7 @@ function RailTile({ feed, isActive, hasAudio, onClick }) {
       }`}
       style={{ aspectRatio: '16 / 9' }}
     >
-      <img src={feed.poster} alt="" className="w-full h-full object-cover" />
+      <img src={feed.poster} alt="" className="w-full h-full object-contain" />
       <span className="absolute inset-0 bg-ink/35" />
       <span className="absolute bottom-1.5 left-2 font-label text-[0.58rem] uppercase tracking-[0.14em] text-oat/85">
         {feed.label}
