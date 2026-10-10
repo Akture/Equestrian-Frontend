@@ -6,8 +6,10 @@ import Footer from '@/components/Footer';
 import ChunkBrowser from '@/components/ChunkBrowser';
 import DemoRibbon from '@/components/DemoRibbon';
 import { allArenaParams, getArena, getBarn } from '@/lib/barns';
-import { chunksForDay, days, purchasesForBarn } from '@/lib/rides';
+import { availableChunksForDay, getRecentDays, purchasesForBarn } from '@/lib/rides';
 import { tickerLines } from '@/lib/copy';
+
+export const dynamic = 'force-dynamic';
 
 export function generateStaticParams() {
   return allArenaParams();
@@ -26,7 +28,13 @@ export default async function ArenaPage({ params }) {
   const arena = getArena(barnSlug, arenaSlug);
   if (!barn || !arena) notFound();
 
-  const chunksByDay = Object.fromEntries(days.map((d) => [d.key, chunksForDay(barnSlug, arenaSlug, d.key)]));
+  const dayOptions = getRecentDays();
+  const chunksByDay = Object.fromEntries(
+    dayOptions.map((day) => [
+      day.key,
+      availableChunksForDay(barnSlug, arenaSlug, day.key, new Date(), dayOptions),
+    ])
+  );
   const ownedIds = purchasesForBarn(barnSlug)
     .filter((p) => p.arena === arenaSlug)
     .map((p) => p.id);
@@ -54,15 +62,25 @@ export default async function ArenaPage({ params }) {
               </p>
               <h1 className="font-display text-[2.2rem] md:text-[2.8rem] leading-tight">{arena.name}</h1>
               <p className="mt-4 text-ink/65 dark:text-oat/60 leading-relaxed max-w-lg">
-                Everything recorded here in the last two days is listed below in 15-minute chunks.
-                Narrow it to the time you rode, select up to an hour in a row, and buy it. Every
-                camera in the arena comes with the purchase.
+                Browse all available footage, newest first. Purchase in 15-minute chunks, up to
+                60 minutes at a time. Every purchase includes three video angles that play
+                seamlessly in our media player. Downloads arrive as separate files for each angle;
+                playing all three together offline requires a specialized media player. Footage
+                is visual only and has no sound.
               </p>
             </div>
             <DemoRibbon />
           </div>
 
-          <ChunkBrowser barnSlug={barn.slug} arenaSlug={arena.slug} chunksByDay={chunksByDay} ownedIds={ownedIds} />
+          <ChunkBrowser
+            barnSlug={barn.slug}
+            barnName={barn.name}
+            arenaSlug={arena.slug}
+            arenaName={arena.name}
+            dayOptions={dayOptions}
+            chunksByDay={chunksByDay}
+            ownedIds={ownedIds}
+          />
         </div>
       </main>
 

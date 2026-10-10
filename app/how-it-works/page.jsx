@@ -25,11 +25,10 @@ export default function HowItWorksPage() {
               How it works
             </p>
             <h1 className="font-display text-[2.4rem] md:text-[3.2rem] leading-[1.08]">
-              From your barn’s code to your footage
+              From sign-in to your footage
             </h1>
             <p className="mt-6 text-ink/65 dark:text-oat/60 leading-relaxed">
-              You enter a code once. After that, finding a ride is picking an arena, a day, and
-              the stretch of time you rode in.
+              Sign in or create an account, then pick an arena, a day, and the time you rode in.
             </p>
           </div>
         </Section>
@@ -100,16 +99,16 @@ export default function HowItWorksPage() {
         <Section tone="oat" className="py-20">
           <div className="max-w-3xl mx-auto px-6 text-center">
             <h2 className="font-display text-[1.7rem] md:text-[2.1rem] mb-4">
-              Have your barn’s code?
+              Ready to purchase footage?
             </h2>
             <p className="text-ink/65 dark:text-oat/55 mb-8 leading-relaxed">
-              Enter it once and your account is tied to that barn from then on.
+              Log in or create an account to browse the footage available at Aubrey Meadows.
             </p>
             <Link
               href="/access"
               className="btn-hermes inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-label text-sm font-semibold shadow-hermes-md"
             >
-              Enter your barn code
+              Purchase footage
               <i className="ph-bold ph-arrow-right text-sm" />
             </Link>
           </div>

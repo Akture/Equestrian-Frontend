@@ -2,30 +2,23 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { barns } from '@/lib/barns';
 import DemoRibbon from './DemoRibbon';
+import { DEFAULT_BARN_SLUG, MOCK_ACCOUNT_KEY } from '@/lib/access';
 
-// MOCK ACCESS. Two paths on one page, the way the product works:
-//   · Create account — email, password and the barn code, entered once.
-//   · Log in — email and password. No code; the account is already tied.
-// The "account" is a record in this browser's localStorage so the flow can be
-// walked end to end. Nothing is sent anywhere. Try AA1111 for the demo barn.
-const KEY = 'aq-mock-account';
-
+// Mock accounts live in this browser until the production auth provider is connected.
 function readAccount() {
   try {
-    return JSON.parse(localStorage.getItem(KEY) || 'null');
-  } catch (e) {
+    return JSON.parse(localStorage.getItem(MOCK_ACCOUNT_KEY) || 'null');
+  } catch {
     return null;
   }
 }
 
-export default function AccessForm({ helpText }) {
+export default function AccessForm() {
   const router = useRouter();
   const [mode, setMode] = useState('create'); // 'create' | 'login'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [existing, setExisting] = useState(null);
 
@@ -34,11 +27,6 @@ export default function AccessForm({ helpText }) {
     setExisting(acct);
     if (acct) setMode('login');
   }, []);
-
-  function barnForCode(typed) {
-    const up = typed.trim().toUpperCase();
-    return barns.find((b) => up.startsWith(b.accessCodeHint.toUpperCase())) || null;
-  }
 
   function onSubmit(e) {
     e.preventDefault();
@@ -50,35 +38,42 @@ export default function AccessForm({ helpText }) {
     }
 
     if (mode === 'create') {
-      const barn = barnForCode(code);
-      if (!code.trim()) {
-        setError('Enter the code from your barn’s link.');
-        return;
-      }
-      if (!barn) {
-        setError('That code does not match a barn in this mockup. Try AA1111 for the demo barn.');
-        return;
-      }
       try {
-        localStorage.setItem(KEY, JSON.stringify({ email: email.trim(), barn: barn.slug }));
-      } catch (err) {
-        /* private browsing — the account just does not persist */
+        const account = { email: email.trim(), barn: DEFAULT_BARN_SLUG, provider: 'email' };
+        localStorage.setItem(MOCK_ACCOUNT_KEY, JSON.stringify(account));
+        router.push(`/${DEFAULT_BARN_SLUG}`);
+      } catch {
+        setError('Your account could not be saved in this browser. Check your browser storage settings and try again.');
       }
-      router.push(`/${barn.slug}`);
       return;
     }
 
     // log in
     const acct = readAccount();
     if (!acct) {
-      setError('No account in this browser yet. Create one with your barn code.');
+      setError('No account in this browser yet. Create an account or continue with Google.');
       return;
     }
     if (acct.email !== email.trim()) {
       setError('That email does not match the account in this browser.');
       return;
     }
-    router.push(`/${acct.barn}`);
+    router.push(`/${DEFAULT_BARN_SLUG}`);
+  }
+
+  function onGoogleSignIn() {
+    setError('');
+    try {
+      const account = {
+        email: existing?.email || 'google-rider@example.com',
+        barn: DEFAULT_BARN_SLUG,
+        provider: 'google',
+      };
+      localStorage.setItem(MOCK_ACCOUNT_KEY, JSON.stringify(account));
+      router.push(`/${DEFAULT_BARN_SLUG}`);
+    } catch {
+      setError('Google sign-in could not be saved in this browser. Check your browser storage settings and try again.');
+    }
   }
 
   const field =
@@ -143,24 +138,6 @@ export default function AccessForm({ helpText }) {
           />
         </div>
 
-        {mode === 'create' && (
-          <div className="animate-rise">
-            <label htmlFor="aq-code" className={label}>
-              Barn code
-            </label>
-            <input
-              id="aq-code"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="AA1111"
-              autoComplete="off"
-              spellCheck="false"
-              className={`${field} tracking-[0.1em] uppercase placeholder:tracking-normal`}
-            />
-            <p className="mt-3 text-ink/65 dark:text-oat/55 text-[0.82rem] leading-relaxed">{helpText}</p>
-          </div>
-        )}
-
         {error && (
           <p className="text-[0.84rem] text-hermes-ink dark:text-hermes-light leading-relaxed" role="alert">
             {error}
@@ -175,17 +152,32 @@ export default function AccessForm({ helpText }) {
         </button>
       </form>
 
+      <div className="relative my-6 text-center">
+        <span className="relative z-10 bg-oat px-3 font-label text-[0.68rem] uppercase tracking-[0.14em] text-ink/50 dark:bg-ink dark:text-oat/50">
+          or
+        </span>
+        <span className="absolute inset-x-0 top-1/2 h-px bg-ink/10 dark:bg-oat/10" />
+      </div>
+
+      <button
+        type="button"
+        onClick={onGoogleSignIn}
+        className="w-full inline-flex items-center justify-center gap-3 rounded-full border border-ink/15 dark:border-oat/20 bg-white dark:bg-oat/[0.04] px-5 py-3 font-label text-sm font-semibold text-ink dark:text-oat hover:border-hermes transition-colors"
+      >
+        <span aria-hidden="true" className="font-display text-lg font-bold text-[#4285F4]">G</span>
+        Continue with Google
+      </button>
+
       <div className="mt-8 rounded-xl border border-ink/15 dark:border-oat/15 p-5">
         <DemoRibbon className="mb-3" />
         <p className="text-ink/65 dark:text-oat/55 text-[0.82rem] leading-relaxed">
-          The account is a record in this browser only — nothing is sent anywhere. Use code{' '}
-          <span className="font-label font-semibold text-ink dark:text-oat">AA1111</span> for the
-          demo barn.
+          Email accounts and Google sign-in are mocked in this preview and stored in this browser.
+          No authentication data is sent to a server.
           {existing && (
             <>
               {' '}
               An account for <span className="font-semibold">{existing.email}</span> already
-              exists here, tied to /{existing.barn}.
+              exists here.
             </>
           )}
         </p>

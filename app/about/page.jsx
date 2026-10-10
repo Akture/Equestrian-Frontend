@@ -42,8 +42,8 @@ export default function AboutPage() {
               </p>
               <p>
                 It lives at its own address — equestrian.akture.video — with a page for each barn.
-                A barn hands out one code, a client enters it once, and from then on that account
-                is tied to that barn. There is no public feed and no search across barns.
+                Clients sign in or create an account to access the barn page. There is no public
+                feed and no search across barns.
               </p>
             </div>
           </div>

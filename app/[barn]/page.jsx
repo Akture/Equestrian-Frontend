@@ -50,6 +50,18 @@ export default async function BarnPage({ params }) {
             </h1>
             <p className="mt-3 text-oat/60 text-[0.94rem]">{barn.city}</p>
             <p className="mt-6 text-oat/70 leading-relaxed max-w-lg">{barn.blurb}</p>
+            {barn.slug === 'aubreymeadows' && (
+              <div className="mt-6 max-w-lg rounded-xl border border-oat/20 bg-ink/30 p-4">
+                <p className="font-label text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-hermes-light">
+                  Footage availability
+                </p>
+                <p className="mt-2 text-[0.88rem] leading-relaxed text-oat/80">
+                  Monday to Friday: 8am to 5pm · Saturday &amp; Sunday: 9am to 12pm.
+                  Any changes to footage availability will be reflected here. Footage is
+                  available for sale for up to 48 hours after recording.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -102,7 +114,7 @@ export default async function BarnPage({ params }) {
                 <div className="bg-pine-deep px-6 py-4 flex items-center justify-between">
                   <span className="font-label text-[0.72rem] text-oat/65">{arena.use}</span>
                   <span className="inline-flex items-center gap-2 font-label text-[0.8rem] font-semibold text-hermes-light group-hover:gap-3 transition-all">
-                    Find your ride
+                    Purchase footage
                     <i className="ph-bold ph-arrow-right text-sm" />
                   </span>
                 </div>

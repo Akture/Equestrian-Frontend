@@ -9,7 +9,7 @@ Read this before changing copy or showing the site outside the team.
 
 | Decision | Source |
 |---|---|
-| Barn code entered **once** to create an account tied to that barn; ordinary login after | usability note |
+| No barn code; sign up or log in (including Google) to access Aubrey Meadows | current access flow |
 | Purchase page **auto-populates**; a date + start/end time **filter** narrows it | usability note; Aryan 9/21 |
 | **No preview** before purchase; a purchase is **every angle**, no picking | usability note |
 | Unit is the **15-minute chunk** | usability note |

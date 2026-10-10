@@ -19,35 +19,46 @@ npm run build    # runs the guardrail first, then next build — same on Vercel
 | Path | What it is |
 |---|---|
 | `/` | Landing — who it is for, the multi-camera player, pricing, barns |
-| `/how-it-works` | Code once, pick the arena and the day, buy the chunks, watch and download |
+| `/how-it-works` | Sign in, pick the arena and the day, buy the chunks, watch and download |
 | `/pricing` | The three tiers over 15-minute chunks |
 | `/faq` | Eleven questions, including who can see footage and how long it stays |
 | `/barns` | The barns we are in, and how a barn comes online |
-| `/access` | Create account (email, password, barn code) or log in |
-| `/[barn]` | A barn's portal — one block per arena, "Find your ride" into each |
-| `/[barn]/[arena]` | **The purchase page.** Every 15-minute chunk from the last 48 hours, a date + time filter, select up to an hour in a row |
-| `/[barn]/[arena]/watch/[folder]` | **The player.** Bought folders only — there is no preview |
+| `/access` | Create an account with email/password, log in, or use the mock Google sign-in |
+| `/[barn]` | A barn's portal — one block per arena, "Purchase footage" into each |
+| `/[barn]/[arena]` | **The purchase page.** All available 15-minute footage segments from the last 48 hours, newest first, with day and time filters |
+| `/[barn]/[arena]/watch/[folder]` | **The player.** Purchased folders and the demo multi-camera preview |
 | `/[barn]/my-videos` | Purchases as folders of three angles: rename, delete, combine, play in order, download |
 | `/[barn]/profile` | The mock account, and log out |
 | `/[barn]/support` | A form that opens a real email to `contact@akture.video` |
 
-**The demo barn** is code **`AA1111`**. Create an account with it on `/access` and you land on
-`/demo` with a day of mock footage and one purchase in My Videos. Aubrey Meadows carries the
-fuller worked example: an hour bought as four folders plus a later purchase for autoplay at
-`/aubreymeadows/covered/watch/aubreymeadows-covered-0916-1600`.
+Create an account or use the mock Google sign-in on `/access` to open Aubrey Meadows. The
+account is stored in this browser only; there is no production authentication provider connected
+yet. Aubrey Meadows carries the fuller worked example: mock footage, three camera angles, and
+seeded purchases in My Videos.
 Seeded purchased folders use local sample MP4s from `public/videos/` to exercise playback and
 downloads; they stand in for the signed camera-angle URLs supplied by a production backend.
 
 ## The product, as built here
 
-- **Access.** The barn code is entered once, to create an account tied to that barn. After that
-  it's an ordinary login. The mock account lives in `localStorage`; nothing is sent anywhere.
+- **Access.** The barn code is not required. Email/password account creation, login, and Google
+  sign-in are mocked in the browser and redirect to Aubrey Meadows. Production OAuth and account
+  services still need to be connected.
 - **Buying.** Footage is sold in **15-minute chunks**, listed for **48 hours** after recording.
   A purchase is one to four contiguous chunks — an hour, max — and is always **every camera in
   the arena.** Tiers: 0–15 min $15.99 · 16–30 min $24.99 · 31–60 min $39.99. A discount-code
-  field is on the purchase bar. No preview before purchase.
+  field is on the purchase bar. The checkout mock accepts Stripe test card `4242 4242 4242 4242`
+  and simulates decline for `4000 0000 0000 9995`; successful folders are saved in browser
+  storage and immediately open My Videos. No live Stripe API calls or card data storage are used.
+- **Availability.** Aubrey Meadows footage is scheduled Monday to Friday, 8am–5pm, and Saturday
+  and Sunday, 9am–12pm. The day filter starts on **All available** (newest first) and can narrow
+  to Today, Yesterday, or 2 Days ago. The time filter narrows the selected day.
+- **Footage assets.** Mock segments expose a stable `recordingId`, `recordedAt`, `availableUntil`,
+  `thumbnailUrl`, and per-camera `assets.angles` entries with `cameraId`, `storageKey`, and `url`.
+  Replace the mock data provider and provide S3-backed object keys/signed URLs while preserving
+  these fields to connect real recordings to the purchase UI.
 - **What you get.** One folder per chunk, three angle files in each, named so they sort and
-  never collide:
+  never collide. The browser player synchronizes all three angles. Offline playback of all
+  three downloaded files requires a specialized media player; footage has no sound:
 
   | Where | Name |
   |---|---|
@@ -106,7 +117,8 @@ are dark text on the orange — white on `#F37021` is 2.89:1 and fails WCAG AA.
 - WCAG AA contrast on every page in both light and dark, including text over photos checked
   against the worst case of a pure-white image, with a scanner proven against planted failures.
 - Purchase flow: selection, tier pricing, the four-chunk cap, non-adjacent restart, the filter.
-- Access: wrong code refused, `AA1111` creates the account and lands on the demo barn.
+- Access: email signup, login, and mock Google sign-in open Aubrey Meadows; barn routes require a
+  browser mock account.
 - Player: seek, angle switch holds the clock, play-through advances to the next folder, N/P,
   all-three buffering note.
 - Player preview: `/demo/my-videos` has a separate three-feed sample folder. It uses local clips

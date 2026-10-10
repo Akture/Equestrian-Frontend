@@ -11,7 +11,7 @@ const topics = [
   'My ride is missing from the arena page',
   'A purchase did not arrive',
   'A video will not play or download',
-  'My barn code does not work',
+  'I cannot log in or access the barn',
   'Something else',
 ];
 

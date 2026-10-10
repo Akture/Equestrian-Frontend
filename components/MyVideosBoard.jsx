@@ -5,6 +5,7 @@ import Link from 'next/link';
 import VideoDownloadButton from './VideoDownloadButton';
 import { feeds } from '@/lib/media';
 import { CHUNK_MINUTES } from '@/lib/rides';
+import { readMockPurchases } from '@/lib/purchaseStore';
 
 // My Videos. Every purchase is a run of 15-minute folders, three angle files in
 // each. Rename, delete and combine work for real in this browser's storage so
@@ -43,11 +44,18 @@ export default function MyVideosBoard({ barnSlug, folders }) {
   const [editing, setEditing] = useState(null); // folder id being renamed
   const [editingFile, setEditingFile] = useState(null); // `${id}:${angle}`
   const [note, setNote] = useState('');
+  const [purchasedFolders, setPurchasedFolders] = useState([]);
+  const [purchaseLoadError, setPurchaseLoadError] = useState('');
 
   useEffect(() => {
     const s = load();
     if (s) setState({ names: {}, fileNames: {}, deleted: [], combined: [], ...s });
-  }, []);
+    try {
+      setPurchasedFolders(readMockPurchases().filter((purchase) => purchase.barn === barnSlug));
+    } catch (error) {
+      setPurchaseLoadError(`New purchases could not be loaded: ${error.message}`);
+    }
+  }, [barnSlug]);
 
   function commit(next) {
     setState(next);
@@ -59,8 +67,10 @@ export default function MyVideosBoard({ barnSlug, folders }) {
   }
 
   const live = useMemo(
-    () => folders.filter((f) => !state.deleted.includes(f.id)),
-    [folders, state.deleted]
+    () => [...folders, ...purchasedFolders]
+      .filter((folder, index, all) => all.findIndex((item) => item.id === folder.id) === index)
+      .filter((f) => !state.deleted.includes(f.id)),
+    [folders, purchasedFolders, state.deleted]
   );
 
   // Keep every folder together under the date it was recorded.
@@ -135,6 +145,14 @@ export default function MyVideosBoard({ barnSlug, folders }) {
 
   return (
     <div>
+      <p className="mb-8 max-w-3xl text-[0.9rem] leading-relaxed text-ink/65 dark:text-oat/60">
+        If you want to watch all segments in a specific day, click the Autoplay button next to the date.
+      </p>
+      {purchaseLoadError && (
+        <p className="mb-6 rounded-xl border border-red-500/30 bg-red-500/5 p-4 text-[0.84rem] text-red-700 dark:text-red-300" role="alert">
+          {purchaseLoadError}
+        </p>
+      )}
       {/* toolbar ------------------------------------------------------ */}
       {(anySelected || note) && (
         <div className="rounded-2xl border border-ink/15 dark:border-oat/15 bg-white/50 dark:bg-oat/[0.03] p-3 flex flex-wrap items-center gap-2 mb-8">
@@ -215,7 +233,7 @@ export default function MyVideosBoard({ barnSlug, folders }) {
             <div className="flex items-center justify-between gap-4 mb-5 border-b border-ink/15 dark:border-oat/15 pb-4">
               <h2 className="font-display text-xl md:text-2xl">{g.label}</h2>
               <Link
-                href={`/${barnSlug}/${first.arena}/watch/${first.id}?autoplay=1`}
+                href={`/${barnSlug}/${first.arena}/watch/${first.id}?autoplay=1&queue=${encodeURIComponent(g.items.map((item) => item.id).join(','))}`}
                 className="inline-flex shrink-0 items-center gap-2 btn-hermes rounded-full px-5 py-2.5 font-label text-[0.82rem] font-semibold"
               >
                 <i className="ph-fill ph-play text-xs" />
