@@ -1,5 +1,6 @@
 import Script from 'next/script';
 import { Instrument_Serif, Inter, Outfit } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 
 const display = Instrument_Serif({
@@ -77,7 +78,10 @@ export default function RootLayout({ children }) {
           {themeBootstrap}
         </Script>
       </head>
-      <body className="bg-oat text-ink dark:bg-ink dark:text-oat">{children}</body>
+      <body className="bg-oat text-ink dark:bg-ink dark:text-oat">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
