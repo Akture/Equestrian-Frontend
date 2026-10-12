@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import MultiCamPlayer from '@/components/MultiCamPlayer';
 import MockPurchaseGate from '@/components/MockPurchaseGate';
 import { getArena, getBarn } from '@/lib/barns';
@@ -58,19 +57,13 @@ export default async function WatchPage({ params, searchParams }) {
   ];
 
   return (
-    <main className="min-h-screen bg-ink px-3 py-4 text-oat md:px-8 md:py-6">
-      <div className="mx-auto max-w-[1720px]">
-        <Link
-          href={`/${barn.slug}/my-videos`}
-          className="mb-4 inline-flex items-center gap-2 font-label text-[0.78rem] text-oat/65 transition-colors hover:text-hermes-light"
-        >
-          <i className="ph-bold ph-arrow-left" aria-hidden="true" />
-          My Videos
-        </Link>
+    <main className="h-[100dvh] overflow-hidden bg-ink p-2 text-oat md:p-4">
+      <div className="mx-auto h-full max-w-[1720px]">
         <MockPurchaseGate barnSlug={barnSlug} folderIds={folderIds} seededIds={seededIds}>
           <MultiCamPlayer
             session={folder}
             queue={queue}
+            autoPlayNext={autoPlay}
             autoStart={autoPlay}
             markers={demoMarkers}
             barnName={barn.name}

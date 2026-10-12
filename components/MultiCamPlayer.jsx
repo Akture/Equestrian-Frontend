@@ -36,7 +36,6 @@ export default function MultiCamPlayer({
   const duration = hasVideo && feeds.every((feed) => mediaDurations[feed.id])
     ? Math.min(...feeds.map((feed) => mediaDurations[feed.id]))
     : sessionDuration;
-  const windowStart = parseClock(session.start);
 
   const [t, setT] = useState(() => (hasVideo ? 0 : sessionDuration * 0.32));
   const [playing, setPlaying] = useState(false);
@@ -44,8 +43,6 @@ export default function MultiCamPlayer({
   const [active, setActive] = useState('side');
   const [clockMode, setClockMode] = useState('elapsed'); // 'wall' | 'elapsed'
   const [userMarks, setUserMarks] = useState([]);
-  const [editingMark, setEditingMark] = useState(null);
-  const [markLabel, setMarkLabel] = useState('');
   const [mediaMessage, setMediaMessage] = useState('');
 
   const rafRef = useRef(null);
@@ -55,6 +52,7 @@ export default function MultiCamPlayer({
   const videoRefs = useRef({});
   const previousSessionRef = useRef(session.id);
   const resumeAfterLoadRef = useRef(false);
+  const pendingSeekRef = useRef(null);
   const lastSyncRef = useRef(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const tRef = useRef(0);
@@ -71,7 +69,12 @@ export default function MultiCamPlayer({
     previousSessionRef.current = session.id;
     if (sessionChanged) setMediaDurations({});
     setMediaMessage('');
-    setT(hasVideo ? 0 : sessionDuration * 0.32);
+    const pendingSeek = pendingSeekRef.current;
+    const initialTime = pendingSeek?.id === session.id
+      ? pendingSeek.fraction * sessionDuration
+      : hasVideo ? 0 : sessionDuration * 0.32;
+    setT(initialTime);
+    tRef.current = initialTime;
     try {
       const stored = JSON.parse(localStorage.getItem(`aq-player-marks:${session.id}`) || '[]');
       setUserMarks(Array.isArray(stored) ? stored : []);
@@ -98,7 +101,8 @@ export default function MultiCamPlayer({
     resumeAfterLoadRef.current = false;
     const videos = feeds.map((feed) => videoRefs.current[feed.id]).filter(Boolean);
     videos.forEach((video) => {
-      video.currentTime = 0;
+      const seekFraction = Math.min(1, Math.max(0, tRef.current / sessionDuration));
+      video.currentTime = seekFraction * video.duration;
       video.playbackRate = speed;
     });
     Promise.all(videos.map((video) => video.play()))
@@ -107,7 +111,7 @@ export default function MultiCamPlayer({
         setPlaying(false);
         setMediaMessage('A camera could not start automatically. Press Play to retry.');
       });
-  }, [videosReady, session.id, speed, autoStart]);
+  }, [videosReady, session.id, sessionDuration, speed, autoStart]);
 
   useEffect(() => {
     if (autoStart && !hasVideo) setPlaying(true);
@@ -219,18 +223,6 @@ export default function MultiCamPlayer({
 
   const nudge = useCallback((delta) => seek(tRef.current + delta), [seek]);
 
-  const goToFolder = useCallback(
-    (i) => {
-      if (i < 0 || i >= queue.length || (i >= purchaseQueue.length && !autoPlayNext)) return;
-      resumeAfterLoadRef.current = playing;
-      cursorRef.current = i;
-      setCursor(i);
-      tRef.current = 0;
-      setT(0);
-    },
-    [queue.length, purchaseQueue.length, autoPlayNext, playing]
-  );
-
   // Fullscreen takes the whole player — stage, rail and transport — because a
   // native <video> loses its controls in fullscreen and that is the reason the
   // team chose a custom player.
@@ -288,14 +280,27 @@ export default function MultiCamPlayer({
     }
   }
 
-  const pct = duration ? t / duration : 0;
+  const dayTimeline = autoPlayNext || purchaseQueue.length > 1;
+  const timelineQueue = dayTimeline ? purchaseQueue : [session];
+  const windowStart = parseClock(dayTimeline ? timelineQueue[0].start : session.start);
+  const activeTimelineDuration = session.minutes * 60;
+  const timelineDuration = dayTimeline
+    ? timelineQueue.reduce((total, item) => total + item.minutes * 60, 0)
+    : activeTimelineDuration;
+  const timelineOffset = dayTimeline
+    ? purchaseQueue.slice(0, cursor).reduce((total, item) => total + item.minutes * 60, 0)
+    : 0;
+  const timelinePosition = dayTimeline
+    ? timelineOffset + (duration ? (t / duration) * activeTimelineDuration : 0)
+    : (duration ? (t / duration) * timelineDuration : 0);
+  const pct = timelineDuration ? timelinePosition / timelineDuration : 0;
   const activeFeed = feeds.find((f) => f.id === active) || feeds[0];
   const deckFeeds = [activeFeed, ...feeds.filter((feed) => feed.id !== activeFeed.id)];
 
   const timeLabel =
     clockMode === 'wall'
-      ? formatClock(windowStart + t, true)
-      : `${formatElapsed(t)} / ${formatElapsed(duration)}`;
+      ? formatClock(windowStart + timelinePosition, true)
+      : `${formatElapsed(timelinePosition)} / ${formatElapsed(timelineDuration)}`;
   const sessionTitle = videoFolderTitle(barnName || session.barnName || '', session);
 
   function addMark() {
@@ -304,25 +309,38 @@ export default function MultiCamPlayer({
     tRef.current = seconds;
     setT(seconds);
     updateUserMarks([...userMarks, mark]);
-    setEditingMark(mark.id);
-    setMarkLabel(mark.label);
-  }
-
-  function saveMarkLabel(e) {
-    e.preventDefault();
-    updateUserMarks(userMarks.map((mark) => mark.id === editingMark ? { ...mark, label: markLabel.trim() || mark.label } : mark));
-    setEditingMark(null);
-  }
-
-  function deleteMark(id) {
-    updateUserMarks(userMarks.filter((mark) => mark.id !== id));
-    if (editingMark === id) setEditingMark(null);
   }
 
   function onStripClick(e) {
     const rect = stripRef.current?.getBoundingClientRect();
     if (!rect) return;
-    seek(((e.clientX - rect.left) / rect.width) * duration);
+    const target = ((e.clientX - rect.left) / rect.width) * timelineDuration;
+    if (!dayTimeline) {
+      seek((target / timelineDuration) * duration);
+      return;
+    }
+
+    let offset = 0;
+    const targetIndex = timelineQueue.findIndex((item, index) => {
+      const end = offset + item.minutes * 60;
+      if (target < end || index === timelineQueue.length - 1) return true;
+      offset = end;
+      return false;
+    });
+    const targetFolder = timelineQueue[Math.max(0, targetIndex)];
+    const segmentDuration = targetFolder.minutes * 60;
+    const fraction = Math.min(1, Math.max(0, (target - offset) / segmentDuration));
+    if (targetIndex === cursor) {
+      seek(fraction * duration);
+      return;
+    }
+
+    pendingSeekRef.current = { id: targetFolder.id, fraction };
+    resumeAfterLoadRef.current = playing;
+    cursorRef.current = targetIndex;
+    setCursor(targetIndex);
+    tRef.current = fraction * segmentDuration;
+    setT(tRef.current);
   }
 
   return (
@@ -331,7 +349,7 @@ export default function MultiCamPlayer({
       className={`bg-ink text-oat border border-brass/20 overflow-hidden shadow-rail flex flex-col ${
         isFullscreen
           ? 'h-[100svh] rounded-none p-3 md:p-5'
-          : 'h-[min(88svh,960px)] min-h-[560px] rounded-2xl lg:h-[min(960px,88svh)] lg:min-h-[650px]'
+          : 'h-full min-h-0 rounded-2xl'
       }`}
     >
       {/* -- context bar ---------------------------------------------------- */}
@@ -398,6 +416,13 @@ export default function MultiCamPlayer({
                     const { duration: videoDuration } = e.currentTarget;
                     if (Number.isFinite(videoDuration)) {
                       setMediaDurations((current) => ({ ...current, [feed.id]: videoDuration }));
+                      const pendingSeek = pendingSeekRef.current;
+                      if (pendingSeek?.id === session.id) {
+                        e.currentTarget.currentTime = pendingSeek.fraction * videoDuration;
+                        if (feeds.every((item) => videoRefs.current[item.id]?.readyState >= 1)) {
+                          pendingSeekRef.current = null;
+                        }
+                      }
                     }
                   }}
                   onError={() => setMediaMessage(`${feed.label} could not load. Check the connection and retry.`)}
@@ -452,57 +477,6 @@ export default function MultiCamPlayer({
 
       {/* -- transport ------------------------------------------------------ */}
       <div className="px-3 md:px-6 pb-5 pt-1">
-        {/* jump-to chips, seeded from the barn schedule */}
-        <div className="flex flex-nowrap items-center gap-2 mb-2 overflow-x-auto">
-          <span className="font-label text-[0.6rem] uppercase tracking-[0.18em] text-oat/55 mr-1">
-            Jump to
-          </span>
-          {allMarks.map((m, i) => (
-            <div key={m.id || `${m.label}-${i}`} className="inline-flex items-center rounded-full border border-oat/15 overflow-hidden text-[0.68rem]">
-              {editingMark === m.id ? (
-                <form onSubmit={saveMarkLabel} className="inline-flex items-center gap-1 p-1">
-                  <input
-                    autoFocus
-                    value={markLabel}
-                    onChange={(e) => setMarkLabel(e.target.value)}
-                    aria-label="Timestamp name"
-                    className="w-28 bg-transparent px-1 text-oat focus:outline-none"
-                  />
-                  <button type="submit" className="px-2 py-1 text-hermes-light">Save</button>
-                </form>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => seek(m.at * duration)}
-                    className={`px-2.5 py-1 transition-colors ${m.owner === 'user' ? 'text-hermes hover:bg-hermes/10' : 'text-oat/60 hover:text-hermes-light'}`}
-                  >
-                    {formatClock(windowStart + m.at * duration)} · {m.label}
-                  </button>
-                  {m.owner === 'user' && (
-                    <>
-                      <button
-                        type="button"
-                        aria-label={`Rename ${m.label}`}
-                        title="Rename timestamp"
-                        onClick={() => { setEditingMark(m.id); setMarkLabel(m.label); }}
-                        className="px-1.5 py-1 text-oat/50 hover:text-hermes-light"
-                      ><i className="ph-bold ph-pencil-simple" /></button>
-                      <button
-                        type="button"
-                        aria-label={`Delete ${m.label}`}
-                        title="Delete timestamp"
-                        onClick={() => deleteMark(m.id)}
-                        className="px-1.5 py-1 pr-2.5 text-oat/50 hover:text-hermes-light"
-                      ><i className="ph-bold ph-x" /></button>
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-
         {/* activity strip + scrub track */}
         <div
           ref={stripRef}
@@ -521,7 +495,11 @@ export default function MultiCamPlayer({
               className={`absolute top-0 w-[3px] h-5 rounded-full pointer-events-none ${
                 m.kind === 'mine' ? 'bg-hermes' : 'bg-brass'
               }`}
-              style={{ left: `${m.at * 100}%` }}
+              style={{
+                left: `${(dayTimeline
+                  ? (timelineOffset + m.at * activeTimelineDuration) / timelineDuration
+                  : m.at) * 100}%`,
+              }}
             />
           ))}
 
@@ -532,38 +510,10 @@ export default function MultiCamPlayer({
 
           <div className="absolute inset-x-0 bottom-0 flex justify-between font-label text-[0.6rem] text-oat/55 tabular-nums">
             <span>{clockMode === 'wall' ? formatClock(windowStart) : formatElapsed(0)}</span>
-            <span>{clockMode === 'wall' ? formatClock(windowStart + duration * 0.5) : formatElapsed(duration * 0.5)}</span>
-            <span>{clockMode === 'wall' ? formatClock(windowStart + duration) : formatElapsed(duration)}</span>
+            <span>{clockMode === 'wall' ? formatClock(windowStart + timelineDuration * 0.5) : formatElapsed(timelineDuration * 0.5)}</span>
+            <span>{clockMode === 'wall' ? formatClock(windowStart + timelineDuration) : formatElapsed(timelineDuration)}</span>
           </div>
         </div>
-
-        {queue.length > 1 && (
-          <ol className="mt-3 flex flex-wrap gap-1.5" aria-label="Folders in this purchase, in order">
-            {purchaseQueue.map((q, i) => (
-              <li key={q.id} className="min-w-[105px] flex-1">
-                <button
-                  type="button"
-                  onClick={() => goToFolder(i)}
-                  aria-current={i === cursor ? 'true' : undefined}
-                  className={`w-full rounded-md border px-2 py-1.5 text-left transition-colors ${
-                    i === cursor
-                      ? 'border-hermes bg-hermes/15 text-oat'
-                      : i < cursor
-                        ? 'border-oat/10 text-oat/55 hover:border-brass/50'
-                        : 'border-oat/15 text-oat/70 hover:border-brass/50'
-                  }`}
-                >
-                  <span className="block font-label text-[0.58rem] uppercase tracking-[0.14em] text-oat/55">
-                    Folder {i + 1}
-                  </span>
-                  <span className="block font-label text-[0.72rem] tabular-nums">
-                    {q.start}–{q.end}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ol>
-        )}
 
         {/* controls */}
         <div className="mt-2 flex flex-wrap lg:flex-nowrap items-center gap-1.5 md:gap-2">

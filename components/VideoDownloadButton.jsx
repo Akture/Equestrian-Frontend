@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import JSZip from 'jszip';
 import { feeds } from '@/lib/media';
 
 export default function VideoDownloadButton({
@@ -10,7 +11,7 @@ export default function VideoDownloadButton({
   children,
   buttonLabel = 'Download',
 }) {
-  const downloads = folders || (folder ? [folder] : []);
+  const downloads = (folders || (folder ? [folder] : [])).filter(Boolean);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
@@ -19,6 +20,7 @@ export default function VideoDownloadButton({
     setBusy(true);
     setMessage('');
     try {
+      const archive = new JSZip();
       for (const item of downloads) {
         for (const angleId of angleIds) {
           const feed = feeds.find((candidate) => candidate.id === angleId);
@@ -30,17 +32,29 @@ export default function VideoDownloadButton({
           if (!response.ok) {
             throw new Error(`${feed.label} could not be downloaded (HTTP ${response.status}).`);
           }
-          const blobUrl = URL.createObjectURL(await response.blob());
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = item.names.files.find((file) => file.id === angleId)?.filename || `${angleId}.mp4`;
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+          const filename = item.names.files.find((file) => file.id === angleId)?.filename || `${angleId}.mp4`;
+          archive.file(filename, await response.blob());
         }
       }
-      setMessage(angleIds.length === feeds.length ? 'All three angle downloads have started.' : 'Download has started.');
+      setMessage('Creating ZIP archive…');
+      const zipBlob = await archive.generateAsync({
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 1 },
+      });
+      const first = downloads[0];
+      const zipFilename = downloads.length === 1
+        ? first.names.zip
+        : `${first.iso || first.dayKey}_AllFootage_${downloads.length}Segments.zip`;
+      const blobUrl = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = zipFilename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+      setMessage(`${zipFilename} is ready to download.`);
     } catch (error) {
       setMessage(error instanceof Error ? `Download failed: ${error.message}` : 'Download failed unexpectedly.');
     } finally {
@@ -79,8 +93,8 @@ export default function VideoDownloadButton({
                 <h2 id="download-options-title" className="mt-2 font-display text-2xl">Choose camera angles</h2>
                 <p className="mt-2 text-[0.84rem] leading-relaxed text-oat/65">
                   {downloads.length > 1
-                    ? `Choose all three angles or one angle for each of the ${downloads.length} selected folders.`
-                    : 'Download all three camera files, or choose a single angle.'}
+                    ? `Choose all three angles or one angle for each of the ${downloads.length} selected footage chunks.`
+                    : 'Create a ZIP with all three camera angles, or choose a single angle.'}
                 </p>
               </div>
               <button

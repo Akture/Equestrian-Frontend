@@ -9,7 +9,7 @@ import { readMockPurchases } from '@/lib/purchaseStore';
 
 // My Videos. Every purchase is a run of 15-minute folders, three angle files in
 // each. Rename, delete and combine work for real in this browser's storage so
-// the flow can be walked; folder downloads are saved directly from the angle files.
+// the flow can be walked; downloads are packaged as ZIP archives in the browser.
 const KEY = 'aq-mock-my-videos';
 
 function formatPurchaseDate(iso, fallback) {
@@ -146,7 +146,7 @@ export default function MyVideosBoard({ barnSlug, folders }) {
   return (
     <div>
       <p className="mb-8 max-w-3xl text-[0.9rem] leading-relaxed text-ink/65 dark:text-oat/60">
-        If you want to watch all segments in a specific day, click the Autoplay button next to the date.
+        Use Autoplay to watch a full day in sequence, or Download day to save every timestamp together.
       </p>
       {purchaseLoadError && (
         <p className="mb-6 rounded-xl border border-red-500/30 bg-red-500/5 p-4 text-[0.84rem] text-red-700 dark:text-red-300" role="alert">
@@ -230,7 +230,7 @@ export default function MyVideosBoard({ barnSlug, folders }) {
         const first = g.items[0];
         return (
           <section key={g.key} className="mb-12">
-            <div className="flex items-center justify-between gap-4 mb-5 border-b border-ink/15 dark:border-oat/15 pb-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-5 border-b border-ink/15 dark:border-oat/15 pb-4">
               <h2 className="font-display text-xl md:text-2xl">{g.label}</h2>
               <Link
                 href={`/${barnSlug}/${first.arena}/watch/${first.id}?autoplay=1&queue=${encodeURIComponent(g.items.map((item) => item.id).join(','))}`}
@@ -239,6 +239,14 @@ export default function MyVideosBoard({ barnSlug, folders }) {
                 <i className="ph-fill ph-play text-xs" />
                 Autoplay
               </Link>
+              <VideoDownloadButton
+                folders={g.items}
+                buttonLabel="Download day"
+                buttonClassName="inline-flex shrink-0 items-center gap-2 rounded-full border border-ink/15 px-5 py-2.5 font-label text-[0.82rem] font-semibold text-ink/75 transition-colors hover:border-hermes dark:border-oat/20 dark:text-oat/75"
+              >
+                <i className="ph-bold ph-download-simple text-sm" />
+                Download day
+              </VideoDownloadButton>
             </div>
 
             <ul className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -273,8 +281,8 @@ export default function MyVideosBoard({ barnSlug, folders }) {
                         ) : (
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
-                              <p className="font-display text-lg leading-snug truncate">{displayName(f) === f.names.display ? f.arenaName : displayName(f)}</p>
-                              <p className="mt-1 text-[0.78rem] text-ink/60 dark:text-oat/55">{f.start}–{f.end} · {f.horse}</p>
+                              <p className="break-words font-display text-lg leading-snug">{displayName(f)}</p>
+                              <p className="mt-1 text-[0.78rem] text-ink/60 dark:text-oat/55">{f.horse}</p>
                             </div>
                             <button
                               type="button"

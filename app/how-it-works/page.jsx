@@ -28,7 +28,7 @@ export default function HowItWorksPage() {
               From sign-in to your footage
             </h1>
             <p className="mt-6 text-ink/65 dark:text-oat/60 leading-relaxed">
-              Sign in or create an account, then pick an arena, a day, and the time you rode in.
+              Sign in or create an account, then find the day and time you rode in on your barn’s footage page.
             </p>
           </div>
         </Section>

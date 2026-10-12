@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { feeds } from '@/lib/media';
 import { previewVideos } from '@/lib/media';
 import {
   CHUNK_MINUTES,
@@ -18,7 +17,7 @@ import {
 import { readMockPurchases, writeMockPurchases } from '@/lib/purchaseStore';
 import StripeTestCheckout from './StripeTestCheckout';
 
-export default function ChunkBrowser({ barnSlug, barnName, arenaSlug, arenaName, dayOptions, chunksByDay, ownedIds }) {
+export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByDay, ownedIds }) {
   const router = useRouter();
   const [dayKey, setDayKey] = useState('all');
   const [fromMin, setFromMin] = useState(null);
@@ -51,13 +50,15 @@ export default function ChunkBrowser({ barnSlug, barnName, arenaSlug, arenaName,
   const all = (dayKey === 'all'
     ? dayOptions.flatMap((day) => chunksByDay[day.key] || [])
     : chunksByDay[dayKey] || []
-  ).sort((a, b) => a.startMin - b.startMin || a.recordedAt.localeCompare(b.recordedAt));
+  ).sort((a, b) => b.dayKey.localeCompare(a.dayKey) || a.startMin - b.startMin || a.arena.localeCompare(b.arena));
   const visible = all
-    .filter((chunk) => chunk.startMin >= (fromMin ?? bounds.start) && chunk.endMin <= (toMin ?? bounds.end))
-    .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
+    .filter((chunk) => chunk.startMin >= (fromMin ?? bounds.start) && chunk.endMin <= (toMin ?? bounds.end));
   const owned = new Set([...ownedIds, ...localOwnedIds]);
 
-  const selectedChunks = selected.map((id) => all.find((chunk) => chunk.id === id)).filter(Boolean);
+  const selectedChunks = selected
+    .map((id) => all.find((chunk) => chunk.id === id))
+    .filter(Boolean)
+    .sort((a, b) => b.dayKey.localeCompare(a.dayKey) || a.startMin - b.startMin);
   const price = selectedChunks.length ? priceForChunks(selectedChunks.length) : 0;
   const range = selectedChunks.length
     ? `${selectedChunks[0].start}–${selectedChunks[selectedChunks.length - 1].end}`
@@ -82,8 +83,8 @@ export default function ChunkBrowser({ barnSlug, barnName, arenaSlug, arenaName,
     }
     const last = all.find((item) => item.id === selected[selected.length - 1]);
     const first = all.find((item) => item.id === selected[0]);
-    const extendsEnd = last && last.dayKey === chunk.dayKey && chunk.startMin === last.endMin;
-    const extendsStart = first && first.dayKey === chunk.dayKey && chunk.endMin === first.startMin;
+    const extendsEnd = last && last.dayKey === chunk.dayKey && last.arena === chunk.arena && chunk.startMin === last.endMin;
+    const extendsStart = first && first.dayKey === chunk.dayKey && first.arena === chunk.arena && chunk.endMin === first.startMin;
     if (!extendsEnd && !extendsStart) {
       setSelected([chunk.id]);
       return;
@@ -106,10 +107,10 @@ export default function ChunkBrowser({ barnSlug, barnName, arenaSlug, arenaName,
     try {
       const existing = readMockPurchases();
       const purchasedAt = new Date().toISOString();
-      const purchaseGroup = `${barnSlug}-${arenaSlug}-${selectedChunks[0].dayKey}-${Date.now()}`;
+      const purchaseGroup = `${barnSlug}-${selectedChunks[0].arena}-${selectedChunks[0].dayKey}-${Date.now()}`;
       const newFolders = selectedChunks.map((chunk) => ({
         ...chunk,
-        arenaName,
+        arenaName: chunk.arenaName,
         minutes: CHUNK_MINUTES,
         horse: chunk.label || 'Arena footage',
         expires: new Date(new Date(chunk.availableUntil).getTime()).toLocaleDateString('en-US', {
@@ -118,7 +119,7 @@ export default function ChunkBrowser({ barnSlug, barnName, arenaSlug, arenaName,
         }),
         owned: true,
         videos: previewVideos,
-        names: folderNames(chunk, arenaName),
+        names: folderNames(chunk, chunk.arenaName),
         purchaseGroup,
         payment: {
           provider: 'stripe-test',
@@ -259,51 +260,68 @@ export default function ChunkBrowser({ barnSlug, barnName, arenaSlug, arenaName,
         </section>
       </div>
 
-      <ol className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {visible.map((chunk) => {
-          const isOwned = owned.has(chunk.id);
-          const isSelected = selected.includes(chunk.id);
-          const title = segmentTitle(barnName, arenaName, chunk);
-          return (
-            <li key={chunk.id}>
-              {isOwned ? (
-                <Link
-                  href={`/${barnSlug}/${arenaSlug}/watch/${chunk.id}`}
-                  className="block h-full overflow-hidden rounded-2xl border border-pine-lit/50 bg-pine-lit/10 transition-colors hover:border-pine-lit"
-                >
-                  <SegmentThumbnail chunk={chunk} />
-                  <div className="p-4">
-                    <ChunkBody chunk={chunk} title={title} />
-                    <span className="mt-3 inline-flex items-center gap-1.5 font-label text-[0.72rem] font-semibold text-pine dark:text-pine-lit">
-                      Bought · Watch <i className="ph-bold ph-arrow-right text-xs" />
-                    </span>
-                  </div>
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => toggle(chunk)}
-                  aria-pressed={isSelected}
-                  className={`block h-full w-full overflow-hidden rounded-2xl border text-left transition-colors ${
-                    isSelected
-                      ? 'border-hermes bg-hermes/15'
-                      : 'border-ink/15 bg-white/60 hover:border-hermes/60 dark:border-oat/15 dark:bg-oat/[0.03]'
-                  }`}
-                >
-                  <SegmentThumbnail chunk={chunk} />
-                  <span className="block p-4">
-                    <ChunkBody chunk={chunk} title={title} />
-                    <span className={`mt-3 inline-flex items-center gap-1.5 font-label text-[0.72rem] font-semibold ${isSelected ? 'text-hermes-ink dark:text-hermes-light' : 'text-ink/65 dark:text-oat/55'}`}>
-                      <i className={`${isSelected ? 'ph-fill ph-check-circle' : 'ph ph-circle'} text-sm`} />
-                      {isSelected ? 'Selected' : 'Select segment'}
-                    </span>
-                  </span>
-                </button>
-              )}
-            </li>
-          );
-        })}
-      </ol>
+      {timeOfDaySections.map((section) => {
+        const sectionChunks = visible.filter((chunk) => section.contains(chunk.startMin));
+        return (
+          <details key={section.label} className="mb-4 rounded-2xl border border-ink/15 bg-white/40 dark:border-oat/15 dark:bg-oat/[0.02]">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-display text-xl marker:hidden">
+              <span>{section.label}</span>
+              <span className="inline-flex items-center gap-3 font-label text-[0.72rem] text-ink/55 dark:text-oat/55">
+                {sectionChunks.length} {sectionChunks.length === 1 ? 'segment' : 'segments'}
+                <i className="ph-bold ph-caret-down" aria-hidden="true" />
+              </span>
+            </summary>
+            {sectionChunks.length ? (
+              <ol className="grid grid-cols-1 gap-4 border-t border-ink/10 p-4 dark:border-oat/10 sm:grid-cols-2 xl:grid-cols-3">
+                {sectionChunks.map((chunk) => {
+                  const isOwned = owned.has(chunk.id);
+                  const isSelected = selected.includes(chunk.id);
+                  const title = segmentTitle(barnName, chunk.arenaName, chunk);
+                  const body = <ChunkBody chunk={chunk} title={title} />;
+                  return (
+                    <li key={chunk.id}>
+                      {isOwned ? (
+                        <Link
+                          href={`/${barnSlug}/${chunk.arena}/watch/${chunk.id}`}
+                          title={title}
+                          className="block h-full rounded-2xl border border-pine-lit/50 bg-pine-lit/10 p-4 transition-colors hover:border-pine-lit"
+                        >
+                          {body}
+                          <span className="mt-3 inline-flex items-center gap-1.5 font-label text-[0.72rem] font-semibold text-pine dark:text-pine-lit">
+                            Bought · Watch <i className="ph-bold ph-arrow-right text-xs" />
+                          </span>
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => toggle(chunk)}
+                          aria-pressed={isSelected}
+                          title={title}
+                          className={`block h-full w-full rounded-2xl border p-4 text-left transition-colors ${
+                            isSelected
+                              ? 'border-hermes bg-hermes/15'
+                              : 'border-ink/15 bg-white/60 hover:border-hermes/60 dark:border-oat/15 dark:bg-oat/[0.03]'
+                          }`}
+                        >
+                          {body}
+                          <span className={`mt-3 inline-flex items-center gap-1.5 font-label text-[0.72rem] font-semibold ${isSelected ? 'text-hermes-ink dark:text-hermes-light' : 'text-ink/65 dark:text-oat/55'}`}>
+                            <i className={`${isSelected ? 'ph-fill ph-check-circle' : 'ph ph-circle'} text-sm`} />
+                            {isSelected ? 'Selected' : 'Select segment'}
+                          </span>
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            ) : (
+              <p className="border-t border-ink/10 px-5 py-4 text-[0.82rem] text-ink/55 dark:border-oat/10 dark:text-oat/55">
+                No {section.label.toLowerCase()} footage is available for this selection.
+              </p>
+            )}
+          </details>
+        );
+      })}
 
       {visible.length === 0 && (
         <div className="mt-5 rounded-2xl border border-dashed border-ink/20 p-8 text-center dark:border-oat/20">
@@ -384,41 +402,30 @@ function segmentTitle(barnName, arenaName, chunk) {
   return `${barnName} (${arenaName}) - ${date} at ${chunk.start} - ${chunk.end} (${chunk.durationMinutes} min)`;
 }
 
-function SegmentThumbnail({ chunk }) {
-  return (
-    <div className="relative grid aspect-video grid-cols-[2fr_1fr] grid-rows-2 gap-1 overflow-hidden bg-ink">
-      {feeds.map((feed, index) => (
-        <div key={feed.id} className={`relative min-h-0 overflow-hidden ${index === 0 ? 'row-span-2' : ''}`}>
-          <img
-            src={index === 0 ? chunk.thumbnailUrl : feed.poster}
-            alt=""
-            className="h-full w-full object-cover"
-          />
-          <span className="absolute inset-0 bg-ink/25" />
-          <span className="absolute bottom-1 left-1.5 font-label text-[0.52rem] uppercase tracking-[0.1em] text-white">
-            {feed.label}
-          </span>
-        </div>
-      ))}
-      <span className="absolute right-2 top-2 rounded-full bg-ink/80 px-2 py-1 font-label text-[0.62rem] font-semibold text-white">
-        {chunk.durationMinutes} min
-      </span>
-    </div>
-  );
-}
-
 function ChunkBody({ chunk, title }) {
+  const date = new Date(`${chunk.iso}T12:00:00`).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
   return (
     <>
-      <p className="break-words font-display text-[1.02rem] leading-snug text-ink dark:text-oat">
-        {title}
+      <p className="break-words font-display text-[1.02rem] leading-snug text-ink dark:text-oat" aria-label={title}>
+        {chunk.label || 'Recorded footage'} · {chunk.arenaName}
       </p>
       <p className="mt-2 text-[0.78rem] leading-snug text-ink/60 dark:text-oat/55">
-        {chunk.label || 'Recorded footage'}{chunk.discipline ? ` · ${chunk.discipline}` : ''}
+        {date} · {chunk.start}–{chunk.end}
       </p>
     </>
   );
 }
+
+const timeOfDaySections = [
+  { label: 'Morning', contains: (minute) => minute < 12 * 60 },
+  { label: 'Afternoon', contains: (minute) => minute >= 12 * 60 && minute < 17 * 60 },
+  { label: 'Evening', contains: (minute) => minute >= 17 * 60 },
+];
 
 function TimeSelect({ label, value, onChange, options }) {
   return (
