@@ -24,7 +24,7 @@ const steps = [
   {
     icon: 'ph ph-link-simple',
     title: 'Your page goes live',
-    desc: 'equestrian.akture.video and your barn name. You hand out a one-time code; each client account is tied to your barn from then on.',
+    desc: 'equestrian.akture.video and your barn name. Clients sign in or create an account to open their barn page.',
   },
 ];
 
@@ -45,8 +45,7 @@ export default function BarnsPage() {
               The barns we are in
             </h1>
             <p className="mt-6 text-ink/65 dark:text-oat/60 leading-relaxed">
-              Each barn has its own page and hands out its own code. Riders reach their barn’s
-              arenas and nothing else.
+              Each barn has its own page. Riders sign in to reach their barn’s arenas and footage.
             </p>
             <div className="flex justify-center mt-7">
               <DemoRibbon />

@@ -2,13 +2,25 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import DemoActionButton from './DemoActionButton';
+import VideoDownloadButton from './VideoDownloadButton';
+import { feeds } from '@/lib/media';
 import { CHUNK_MINUTES } from '@/lib/rides';
+import { readMockPurchases } from '@/lib/purchaseStore';
 
 // My Videos. Every purchase is a run of 15-minute folders, three angle files in
 // each. Rename, delete and combine work for real in this browser's storage so
-// the flow can be walked; download says plainly that it is not wired.
+// the flow can be walked; downloads are packaged as ZIP archives in the browser.
 const KEY = 'aq-mock-my-videos';
+
+function formatPurchaseDate(iso, fallback) {
+  if (!iso) return fallback;
+  const [year, month, day] = iso.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
 
 function load() {
   try {
@@ -32,11 +44,18 @@ export default function MyVideosBoard({ barnSlug, folders }) {
   const [editing, setEditing] = useState(null); // folder id being renamed
   const [editingFile, setEditingFile] = useState(null); // `${id}:${angle}`
   const [note, setNote] = useState('');
+  const [purchasedFolders, setPurchasedFolders] = useState([]);
+  const [purchaseLoadError, setPurchaseLoadError] = useState('');
 
   useEffect(() => {
     const s = load();
     if (s) setState({ names: {}, fileNames: {}, deleted: [], combined: [], ...s });
-  }, []);
+    try {
+      setPurchasedFolders(readMockPurchases().filter((purchase) => purchase.barn === barnSlug));
+    } catch (error) {
+      setPurchaseLoadError(`New purchases could not be loaded: ${error.message}`);
+    }
+  }, [barnSlug]);
 
   function commit(next) {
     setState(next);
@@ -48,20 +67,27 @@ export default function MyVideosBoard({ barnSlug, folders }) {
   }
 
   const live = useMemo(
-    () => folders.filter((f) => !state.deleted.includes(f.id)),
-    [folders, state.deleted]
+    () => [...folders, ...purchasedFolders]
+      .filter((folder, index, all) => all.findIndex((item) => item.id === folder.id) === index)
+      .filter((f) => !state.deleted.includes(f.id)),
+    [folders, purchasedFolders, state.deleted]
   );
 
-  // Group by purchase, newest first.
+  // Keep every folder together under the date it was recorded.
   const groups = useMemo(() => {
     const map = new Map();
     for (const f of live) {
-      if (!map.has(f.purchaseGroup)) map.set(f.purchaseGroup, []);
-      map.get(f.purchaseGroup).push(f);
+      const key = f.iso || f.dayKey || f.dateLabel;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(f);
     }
     return [...map.entries()]
-      .map(([key, items]) => ({ key, items: items.sort((a, b) => a.startMin - b.startMin) }))
-      .sort((a, b) => b.items[0].startMin - a.items[0].startMin);
+      .map(([key, items]) => ({
+        key,
+        label: formatPurchaseDate(items[0].iso, items[0].dateLabel),
+        items: items.sort((a, b) => a.startMin - b.startMin || a.arenaName.localeCompare(b.arenaName)),
+      }))
+      .sort((a, b) => b.key.localeCompare(a.key));
   }, [live]);
 
   const displayName = (f) => state.names[f.id] || f.names.display;
@@ -119,45 +145,55 @@ export default function MyVideosBoard({ barnSlug, folders }) {
 
   return (
     <div>
+      <p className="mb-8 max-w-3xl text-[0.9rem] leading-relaxed text-ink/65 dark:text-oat/60">
+        Use Autoplay to watch a full day in sequence, or Download day to save every timestamp together.
+      </p>
+      {purchaseLoadError && (
+        <p className="mb-6 rounded-xl border border-red-500/30 bg-red-500/5 p-4 text-[0.84rem] text-red-700 dark:text-red-300" role="alert">
+          {purchaseLoadError}
+        </p>
+      )}
       {/* toolbar ------------------------------------------------------ */}
-      <div className="sticky top-28 z-30 rounded-2xl border border-ink/15 dark:border-oat/15 bg-oat/95 dark:bg-ink/95 backdrop-blur p-3 flex flex-wrap items-center gap-2 mb-8">
-        <span className="font-label text-[0.72rem] text-ink/65 dark:text-oat/55 mr-2">
-          {anySelected ? `${selected.length} selected` : 'Select folders to combine, download or delete'}
-        </span>
-        <button
-          type="button"
-          disabled={!anySelected}
-          onClick={combine}
-          className="rounded-full border border-hermes/60 px-4 py-2 font-label text-[0.78rem] font-semibold text-hermes-ink dark:text-hermes-light hover:bg-hermes/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        >
-          <i className="ph-bold ph-git-merge mr-1.5" />
-          Combine
-        </button>
-        <button
-          type="button"
-          disabled={!anySelected}
-          onClick={() => flash('Download is not wired up in this mockup.')}
-          className="rounded-full border border-ink/15 dark:border-oat/20 px-4 py-2 font-label text-[0.78rem] font-semibold text-ink/75 dark:text-oat/75 hover:border-hermes disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        >
-          <i className="ph-bold ph-download-simple mr-1.5" />
-          Download
-        </button>
-        <button
-          type="button"
-          disabled={!anySelected}
-          onClick={() => remove(selected)}
-          className="rounded-full border border-ink/15 dark:border-oat/20 px-4 py-2 font-label text-[0.78rem] font-semibold text-ink/75 dark:text-oat/75 hover:border-hermes disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        >
-          <i className="ph-bold ph-trash mr-1.5" />
-          Delete
-        </button>
-        {note && (
-          <span className="basis-full mt-1 font-label text-[0.74rem] text-hermes-ink dark:text-hermes-light animate-rise" role="status">
-            <i className="ph-fill ph-flask mr-1" />
-            {note}
-          </span>
-        )}
-      </div>
+      {(anySelected || note) && (
+        <div className="rounded-2xl border border-ink/15 dark:border-oat/15 bg-white/50 dark:bg-oat/[0.03] p-3 flex flex-wrap items-center gap-2 mb-8">
+          {anySelected && (
+            <span className="font-label text-[0.72rem] text-ink/65 dark:text-oat/55 mr-2">
+              {selected.length} selected
+            </span>
+          )}
+          <button
+            type="button"
+            disabled={!anySelected}
+            onClick={combine}
+            className="rounded-full border border-hermes/60 px-4 py-2 font-label text-[0.78rem] font-semibold text-hermes-ink dark:text-hermes-light hover:bg-hermes/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            <i className="ph-bold ph-git-merge mr-1.5" />
+            Combine
+          </button>
+          <VideoDownloadButton
+            folders={live.filter((folder) => selected.includes(folder.id))}
+            buttonLabel="Download"
+            buttonClassName="rounded-full border border-ink/15 dark:border-oat/20 px-4 py-2 font-label text-[0.78rem] font-semibold text-ink/75 dark:text-oat/75 hover:border-hermes disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            <i className="ph-bold ph-download-simple mr-1.5" />
+            Download
+          </VideoDownloadButton>
+          <button
+            type="button"
+            disabled={!anySelected}
+            onClick={() => remove(selected)}
+            className="rounded-full border border-ink/15 dark:border-oat/20 px-4 py-2 font-label text-[0.78rem] font-semibold text-ink/75 dark:text-oat/75 hover:border-hermes disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            <i className="ph-bold ph-trash mr-1.5" />
+            Delete
+          </button>
+          {note && (
+            <span className="basis-full mt-1 font-label text-[0.74rem] text-hermes-ink dark:text-hermes-light animate-rise" role="status">
+              {note}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* combined entries ---------------------------------------------- */}
       {state.combined.length > 0 && (
@@ -191,64 +227,48 @@ export default function MyVideosBoard({ barnSlug, folders }) {
       )}
 
       {groups.map((g) => {
-        const first = g.items[0], last = g.items[g.items.length - 1];
+        const first = g.items[0];
         return (
           <section key={g.key} className="mb-12">
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
-              <div>
-                <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-1.5">
-                  <span className="w-6 h-px bg-hermes" aria-hidden="true" />
-                  Purchase
-                </p>
-                <h2 className="font-display text-xl tabular-nums">
-                  {first.arenaName} · {first.dateLabel} · {first.start}–{last.end}
-                </h2>
-                <p className="text-ink/60 dark:text-oat/55 text-[0.8rem] mt-1">
-                  {g.items.length} {g.items.length === 1 ? 'folder' : 'folders'} · {g.items.length * CHUNK_MINUTES} minutes · comes down {first.expires}
-                </p>
-              </div>
-              {g.items.length > 1 && (
-                <Link
-                  href={`/${barnSlug}/${first.arena}/watch/${first.id}`}
-                  className="inline-flex items-center gap-2 btn-hermes rounded-full px-5 py-2.5 font-label text-[0.82rem] font-semibold"
-                >
-                  <i className="ph-fill ph-play text-xs" />
-                  Play all {g.items.length} in order
-                </Link>
-              )}
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-5 border-b border-ink/15 dark:border-oat/15 pb-4">
+              <h2 className="font-display text-xl md:text-2xl">{g.label}</h2>
+              <Link
+                href={`/${barnSlug}/${first.arena}/watch/${first.id}?autoplay=1&queue=${encodeURIComponent(g.items.map((item) => item.id).join(','))}`}
+                className="inline-flex shrink-0 items-center gap-2 btn-hermes rounded-full px-5 py-2.5 font-label text-[0.82rem] font-semibold"
+              >
+                <i className="ph-fill ph-play text-xs" />
+                Autoplay
+              </Link>
+              <VideoDownloadButton
+                folders={g.items}
+                buttonLabel="Download day"
+                buttonClassName="inline-flex shrink-0 items-center gap-2 rounded-full border border-ink/15 px-5 py-2.5 font-label text-[0.82rem] font-semibold text-ink/75 transition-colors hover:border-hermes dark:border-oat/20 dark:text-oat/75"
+              >
+                <i className="ph-bold ph-download-simple text-sm" />
+                Download day
+              </VideoDownloadButton>
             </div>
 
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               {g.items.map((f) => {
                 const isSel = selected.includes(f.id);
                 return (
                   <li
                     key={f.id}
-                    className={`rounded-2xl border p-5 transition-colors ${
+                    className={`rounded-2xl border overflow-hidden transition-colors ${
                       isSel ? 'border-hermes bg-hermes/10' : 'border-ink/15 dark:border-oat/15 bg-white/50 dark:bg-oat/[0.03]'
                     }`}
                   >
-                    <div className="flex items-start gap-3">
-                      <button
-                        type="button"
-                        onClick={() => toggleSelect(f.id)}
-                        aria-pressed={isSel}
-                        aria-label={isSel ? 'Deselect folder' : 'Select folder'}
-                        className={`mt-0.5 w-5 h-5 shrink-0 rounded-md border flex items-center justify-center transition-colors ${
-                          isSel ? 'border-hermes bg-hermes text-ink' : 'border-ink/30 dark:border-oat/30'
-                        }`}
-                      >
-                        {isSel && <i className="ph-bold ph-check text-[0.6rem]" />}
-                      </button>
-
-                      <div className="flex-1 min-w-0">
+                    <FolderThumbnail selected={isSel} onSelect={() => toggleSelect(f.id)} />
+                    <div className="p-4">
+                      <div className="flex items-start gap-2">
                         {editing === f.id ? (
                           <form
                             onSubmit={(e) => {
                               e.preventDefault();
                               rename(f.id, new FormData(e.currentTarget).get('name'));
                             }}
-                            className="flex gap-2"
+                            className="flex min-w-0 flex-1 gap-2"
                           >
                             <input
                               name="name"
@@ -260,7 +280,10 @@ export default function MyVideosBoard({ barnSlug, folders }) {
                           </form>
                         ) : (
                           <div className="flex items-start justify-between gap-2">
-                            <p className="font-display text-lg leading-snug tabular-nums">{displayName(f)}</p>
+                            <div className="min-w-0 flex-1">
+                              <p className="break-words font-display text-lg leading-snug">{displayName(f)}</p>
+                              <p className="mt-1 text-[0.78rem] text-ink/60 dark:text-oat/55">{f.horse}</p>
+                            </div>
                             <button
                               type="button"
                               onClick={() => setEditing(f.id)}
@@ -271,12 +294,10 @@ export default function MyVideosBoard({ barnSlug, folders }) {
                             </button>
                           </div>
                         )}
-                        <p className="text-ink/60 dark:text-oat/55 text-[0.8rem] mt-1">
-                          {f.label || 'Recorded · unlabelled'} · {f.horse}
-                        </p>
-                        <p className="font-label text-[0.68rem] text-ink/65 dark:text-oat/55 mt-1 truncate">{f.names.zip}</p>
-
-                        <ul className="mt-4 space-y-1.5 border-t border-ink/10 dark:border-oat/10 pt-3">
+                      </div>
+                      <details className="mt-3 border-t border-ink/10 dark:border-oat/10 pt-3">
+                        <summary className="cursor-pointer font-label text-[0.68rem] text-ink/60 dark:text-oat/55">Folder files</summary>
+                        <ul className="mt-2 space-y-1.5">
                           {f.names.files.map((a) => {
                             const k = `${f.id}:${a.id}`;
                             return (
@@ -287,7 +308,7 @@ export default function MyVideosBoard({ barnSlug, folders }) {
                                       e.preventDefault();
                                       renameFile(f.id, a.id, new FormData(e.currentTarget).get('name'));
                                     }}
-                                    className="flex-1 flex gap-2"
+                                    className="flex min-w-0 flex-1 gap-2"
                                   >
                                     <input name="name" defaultValue={fileLabel(f, a)} autoFocus className="flex-1 min-w-0 rounded-md border border-hermes bg-white dark:bg-ink px-2 py-1 text-[0.8rem] focus:outline-none" />
                                     <button type="submit" className="btn-hermes rounded-md px-2 font-label text-[0.66rem] font-semibold">Save</button>
@@ -310,6 +331,7 @@ export default function MyVideosBoard({ barnSlug, folders }) {
                             );
                           })}
                         </ul>
+                      </details>
 
                         <div className="mt-4 flex flex-wrap items-center gap-2">
                           <Link
@@ -318,7 +340,14 @@ export default function MyVideosBoard({ barnSlug, folders }) {
                           >
                             Watch
                           </Link>
-                          <DemoActionButton label="Download" icon="ph-bold ph-download-simple" tone="quiet" />
+                          <VideoDownloadButton
+                            folder={f}
+                            buttonLabel="Download"
+                            buttonClassName="inline-flex items-center gap-2 rounded-full border border-ink/15 px-4 py-2 font-label text-[0.76rem] font-semibold text-ink/75 transition-colors hover:border-hermes dark:border-oat/20 dark:text-oat/75"
+                          >
+                            <i className="ph-bold ph-download-simple text-sm" />
+                            Download
+                          </VideoDownloadButton>
                           <button
                             type="button"
                             onClick={() => remove([f.id])}
@@ -327,7 +356,6 @@ export default function MyVideosBoard({ barnSlug, folders }) {
                             Delete
                           </button>
                         </div>
-                      </div>
                     </div>
                   </li>
                 );
@@ -337,9 +365,36 @@ export default function MyVideosBoard({ barnSlug, folders }) {
         );
       })}
 
-      <p className="mt-4 text-ink/65 dark:text-oat/55 text-[0.76rem] leading-relaxed">
-        Rename, delete and combine are saved in this browser only. Download is not wired.
-      </p>
+    </div>
+  );
+}
+
+function FolderThumbnail({ selected, onSelect }) {
+  return (
+    <div className="relative grid aspect-video grid-cols-[2fr_1fr] grid-rows-2 gap-1 overflow-hidden bg-ink">
+      {feeds.map((feed, index) => (
+        <div
+          key={feed.id}
+          className={`relative min-h-0 overflow-hidden ${index === 0 ? 'row-span-2' : ''}`}
+        >
+          <img src={feed.poster} alt="" className="h-full w-full object-cover" />
+          <span className="absolute inset-0 bg-ink/25" />
+          <span className="absolute bottom-1 left-1.5 font-label text-[0.52rem] uppercase tracking-[0.1em] text-white">
+            {feed.label}
+          </span>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-pressed={selected}
+        aria-label={selected ? 'Deselect folder' : 'Select folder'}
+        className={`absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border ${
+          selected ? 'border-hermes bg-hermes text-ink' : 'border-white/70 bg-ink/60 text-white'
+        }`}
+      >
+        {selected && <i className="ph-bold ph-check text-xs" />}
+      </button>
     </div>
   );
 }

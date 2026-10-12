@@ -16,7 +16,7 @@ export default function NotFound() {
           </h1>
           <p className="text-ink/60 dark:text-oat/55 leading-relaxed mb-9">
             Barn pages live at equestrian.akture.video and the barn’s name. If you came from a link
-            your barn sent, check the code on it.
+            someone sent you, check the address or return to the barn page.
           </p>
           <Link
             href="/"

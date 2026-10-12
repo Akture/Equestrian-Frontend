@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import DemoActionButton from './DemoActionButton';
+import { MOCK_ACCOUNT_KEY } from '@/lib/access';
 
 // Reads the mock account this browser created on /access. Log out clears it.
 export default function ProfilePanel({ barn }) {
@@ -12,7 +13,7 @@ export default function ProfilePanel({ barn }) {
 
   useEffect(() => {
     try {
-      setAcct(JSON.parse(localStorage.getItem('aq-mock-account') || 'null'));
+      setAcct(JSON.parse(localStorage.getItem(MOCK_ACCOUNT_KEY) || 'null'));
     } catch (e) {
       setAcct(null);
     }
@@ -20,7 +21,7 @@ export default function ProfilePanel({ barn }) {
 
   function logOut() {
     try {
-      localStorage.removeItem('aq-mock-account');
+      localStorage.removeItem(MOCK_ACCOUNT_KEY);
     } catch (e) {
       /* nothing to clear */
     }
@@ -34,10 +35,10 @@ export default function ProfilePanel({ barn }) {
       <div className="rounded-2xl border border-dashed border-ink/20 dark:border-oat/20 p-12 text-center">
         <p className="font-display text-xl mb-3">Your profile appears here once you have an account</p>
         <p className="text-ink/65 dark:text-oat/55 text-[0.92rem] mb-6">
-          Create one with your barn code and it will show here.
+          Create an account or sign in to access your profile and footage.
         </p>
         <Link href="/access" className="btn-hermes inline-block rounded-full px-6 py-3 font-label text-sm font-semibold">
-          Enter your barn code
+          Log in or sign up
         </Link>
       </div>
     );
@@ -70,8 +71,7 @@ export default function ProfilePanel({ barn }) {
       <div className="rounded-2xl border border-ink/15 dark:border-oat/15 p-6">
         <p className="font-display text-lg mb-2">Log out</p>
         <p className="text-ink/60 dark:text-oat/55 text-[0.84rem] leading-relaxed mb-5">
-          Removes the mock account from this browser. Your barn code is still needed only if you
-          create a new account.
+          Removes the mock account from this browser. Sign in again whenever you want to access your footage.
         </p>
         <button
           type="button"

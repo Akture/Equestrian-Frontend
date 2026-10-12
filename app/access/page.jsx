@@ -5,7 +5,7 @@ import AccessForm from '@/components/AccessForm';
 import { accessCopy, tickerLines } from '@/lib/copy';
 import { media } from '@/lib/media';
 
-export const metadata = { title: 'Enter your barn code — Akture Equestrian' };
+export const metadata = { title: 'Log in or sign up — Akture Equestrian' };
 
 export default function AccessPage() {
   return (
@@ -21,7 +21,7 @@ export default function AccessPage() {
           <div className="relative h-full flex flex-col justify-end p-12">
             <blockquote className="max-w-sm">
               <p className="font-display text-2xl leading-snug text-oat">
-                Enter the code once. After that your account is tied to your barn and you just log in.
+                Sign in or create an account to open Aubrey Meadows and purchase footage.
               </p>
               <p className="mt-5 font-label text-[0.68rem] uppercase tracking-[0.18em] text-hermes-light">
                 How access works
@@ -43,7 +43,7 @@ export default function AccessPage() {
               {accessCopy.sub}
             </p>
 
-            <AccessForm helpText={accessCopy.codeFieldHelp} />
+            <AccessForm />
           </div>
         </div>
       </main>

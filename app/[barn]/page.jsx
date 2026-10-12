@@ -1,12 +1,13 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Ticker from '@/components/Ticker';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Section from '@/components/Section';
 import DemoRibbon from '@/components/DemoRibbon';
+import ChunkBrowser from '@/components/ChunkBrowser';
 import { barns, cameraRig, getBarn } from '@/lib/barns';
 import { tickerLines } from '@/lib/copy';
+import { availableChunksForDay, getRecentDays, purchasesForBarn } from '@/lib/rides';
 
 export function generateStaticParams() {
   return barns.map((b) => ({ barn: b.slug }));
@@ -22,6 +23,18 @@ export default async function BarnPage({ params }) {
   const { barn: slug } = await params;
   const barn = getBarn(slug);
   if (!barn) notFound();
+
+  const dayOptions = getRecentDays();
+  const chunksByDay = Object.fromEntries(
+    dayOptions.map((day) => [
+      day.key,
+      barn.arenas.flatMap((arena) =>
+        availableChunksForDay(slug, arena.slug, day.key, new Date(), dayOptions)
+          .map((chunk) => ({ ...chunk, arenaName: arena.name }))
+      ),
+    ])
+  );
+  const ownedIds = purchasesForBarn(slug).map((purchase) => purchase.id);
 
   return (
     <>
@@ -50,65 +63,44 @@ export default async function BarnPage({ params }) {
             </h1>
             <p className="mt-3 text-oat/60 text-[0.94rem]">{barn.city}</p>
             <p className="mt-6 text-oat/70 leading-relaxed max-w-lg">{barn.blurb}</p>
+            {barn.slug === 'aubreymeadows' && (
+              <div className="mt-6 max-w-lg rounded-xl border border-oat/20 bg-ink/30 p-4">
+                <p className="font-label text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-hermes-light">
+                  Footage availability
+                </p>
+                <p className="mt-2 text-[0.88rem] leading-relaxed text-oat/80">
+                  Monday to Friday: 8am to 5pm · Saturday &amp; Sunday: 9am to 12pm.
+                  Any changes to footage availability will be reflected here. Footage is
+                  available for sale for up to 48 hours after recording.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      {/* The barn portal is a way into an arena. Choose the arena, then the day. */}
       <Section tone="oat" className="py-20">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
             <div>
               <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-4">
                 <span className="w-6 h-px bg-hermes" aria-hidden="true" />
-                Arenas
+                Available footage
               </p>
               <h2 className="font-display text-[1.85rem] md:text-[2.3rem] leading-tight">
-                Open the arena you rode in
+                Find and purchase your ride
               </h2>
             </div>
             <DemoRibbon />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {barn.arenas.map((arena) => (
-              <Link
-                key={arena.slug}
-                href={`/${barn.slug}/${arena.slug}`}
-                className="group relative rounded-2xl overflow-hidden border border-ink/15 dark:border-oat/15 hover:border-hermes transition-colors"
-              >
-                <div className="relative h-56">
-                  <img
-                    src={arena.image}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background:
-                        'linear-gradient(0deg, rgba(8,17,13,0.92) 0%, rgba(8,17,13,0.55) 45%, rgba(8,17,13,0.22) 100%)',
-                    }}
-                  />
-
-                  <div className="absolute inset-x-0 bottom-0 p-6">
-                    <h3 className="font-display text-2xl text-oat">{arena.name}</h3>
-                    <p className="mt-1.5 text-oat/65 text-[0.86rem]">
-                      {arena.dims} · {arena.surface}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-pine-deep px-6 py-4 flex items-center justify-between">
-                  <span className="font-label text-[0.72rem] text-oat/65">{arena.use}</span>
-                  <span className="inline-flex items-center gap-2 font-label text-[0.8rem] font-semibold text-hermes-light group-hover:gap-3 transition-all">
-                    Find your ride
-                    <i className="ph-bold ph-arrow-right text-sm" />
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <ChunkBrowser
+            barnSlug={barn.slug}
+            barnName={barn.name}
+            dayOptions={dayOptions}
+            chunksByDay={chunksByDay}
+            ownedIds={ownedIds}
+          />
         </div>
       </Section>
 

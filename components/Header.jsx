@@ -16,10 +16,9 @@ const baseLinks = [
 export default function Header({ barn = null }) {
   const [open, setOpen] = useState(false);
 
-  // On a barn page the nav points back into that barn rather than the shared site.
+  // On a barn page, keep navigation focused on the barn account tools.
   const links = barn
     ? [
-        ...barn.arenas.map((a) => ({ label: a.name, href: `/${barn.slug}/${a.slug}` })),
         { label: 'My Videos', href: `/${barn.slug}/my-videos` },
         { label: 'Support', href: `/${barn.slug}/support` },
       ]
@@ -81,10 +80,10 @@ export default function Header({ barn = null }) {
             </Link>
 
             <Link
-              href={barn ? `/${barn.slug}` : '/access'}
+              href={barn ? `/${barn.slug}` : '/aubreymeadows'}
               className="btn-hermes px-5 py-2.5 rounded-full font-label text-[0.82rem] font-semibold whitespace-nowrap shadow-hermes-sm"
             >
-              {barn ? 'Find your ride' : 'Enter barn code'}
+              Purchase footage
             </Link>
           </div>
         </div>
@@ -118,11 +117,11 @@ export default function Header({ barn = null }) {
             </div>
 
             <Link
-              href={barn ? `/${barn.slug}` : '/access'}
+              href={barn ? `/${barn.slug}` : '/aubreymeadows'}
               onClick={() => setOpen(false)}
               className="btn-hermes px-5 py-3 rounded-full font-label text-sm font-semibold text-center"
             >
-              {barn ? 'Find your ride' : 'Enter barn code'}
+              Purchase footage
             </Link>
           </nav>
         </div>

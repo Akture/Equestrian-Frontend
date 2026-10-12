@@ -11,9 +11,10 @@
 //      went missing at the same time.
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const SCAN = ['app', 'components', 'lib'];
 const OPACITY_SCALE = new Set([
   0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100,
@@ -30,7 +31,7 @@ function walk(dir, out = []) {
 }
 
 const files = SCAN.flatMap((d) => walk(join(ROOT, d)));
-const rel = (p) => relative(ROOT, p);
+const rel = (p) => relative(ROOT, p).split(sep).join('/');
 const failures = [];
 
 // 1. keyframes in global CSS ------------------------------------------------

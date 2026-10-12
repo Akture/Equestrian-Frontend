@@ -6,7 +6,7 @@ const columns = [
     heading: 'Ride',
     links: [
       { label: 'How it works', href: '/how-it-works' },
-      { label: 'Find your ride', href: '/access' },
+      { label: 'Purchase footage', href: '/aubreymeadows' },
       { label: 'Pricing', href: '/pricing' },
       { label: 'Partner barns', href: '/barns' },
     ],

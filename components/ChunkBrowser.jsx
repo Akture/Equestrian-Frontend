@@ -1,67 +1,90 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { previewVideos } from '@/lib/media';
 import {
-  BARN_HOURS,
   CHUNK_MINUTES,
   MAX_CHUNKS_PER_PURCHASE,
   PURCHASE_WINDOW_HOURS,
-  days,
+  folderNames,
+  hoursForDay,
   minutesToClock,
   money,
   priceForChunks,
 } from '@/lib/rides';
+import { readMockPurchases, writeMockPurchases } from '@/lib/purchaseStore';
+import StripeTestCheckout from './StripeTestCheckout';
 
-// The purchase page for one arena. The list is already full when you land —
-// everything recorded in the last 48 hours — and the filters narrow it.
-// Select up to four chunks in a row and the price follows the tier.
-export default function ChunkBrowser({ barnSlug, arenaSlug, chunksByDay, ownedIds }) {
-  const [dayKey, setDayKey] = useState(days[0].key);
-  const [fromMin, setFromMin] = useState(BARN_HOURS.start);
-  const [toMin, setToMin] = useState(BARN_HOURS.end);
-  const [selected, setSelected] = useState([]); // chunk ids, contiguous, in order
+export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByDay, ownedIds }) {
+  const router = useRouter();
+  const [dayKey, setDayKey] = useState('all');
+  const [fromMin, setFromMin] = useState(null);
+  const [toMin, setToMin] = useState(null);
+  const [selected, setSelected] = useState([]);
   const [discount, setDiscount] = useState('');
   const [note, setNote] = useState('');
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [localOwnedIds, setLocalOwnedIds] = useState([]);
 
+  useEffect(() => {
+    try {
+      setLocalOwnedIds(
+        readMockPurchases()
+          .filter((purchase) => purchase.barn === barnSlug)
+          .map((purchase) => purchase.id)
+      );
+    } catch (error) {
+      setNote(`Saved purchases could not be loaded: ${error.message}`);
+    }
+  }, [barnSlug]);
+
+  const bounds = hoursForDay(dayKey, dayOptions);
   const timeOptions = useMemo(() => {
     const out = [];
-    for (let m = BARN_HOURS.start; m <= BARN_HOURS.end; m += CHUNK_MINUTES) out.push(m);
+    for (let minute = bounds.start; minute <= bounds.end; minute += CHUNK_MINUTES) out.push(minute);
     return out;
-  }, []);
+  }, [bounds.start, bounds.end]);
 
-  const all = chunksByDay[dayKey] || [];
-  const visible = all.filter((c) => c.startMin >= fromMin && c.endMin <= toMin);
-  const owned = new Set(ownedIds);
+  const all = (dayKey === 'all'
+    ? dayOptions.flatMap((day) => chunksByDay[day.key] || [])
+    : chunksByDay[dayKey] || []
+  ).sort((a, b) => b.dayKey.localeCompare(a.dayKey) || a.startMin - b.startMin || a.arena.localeCompare(b.arena));
+  const visible = all
+    .filter((chunk) => chunk.startMin >= (fromMin ?? bounds.start) && chunk.endMin <= (toMin ?? bounds.end));
+  const owned = new Set([...ownedIds, ...localOwnedIds]);
 
-  const selectedChunks = selected.map((id) => all.find((c) => c.id === id)).filter(Boolean);
+  const selectedChunks = selected
+    .map((id) => all.find((chunk) => chunk.id === id))
+    .filter(Boolean)
+    .sort((a, b) => b.dayKey.localeCompare(a.dayKey) || a.startMin - b.startMin);
   const price = selectedChunks.length ? priceForChunks(selectedChunks.length) : 0;
   const range = selectedChunks.length
     ? `${selectedChunks[0].start}–${selectedChunks[selectedChunks.length - 1].end}`
     : '';
 
-  function flash(msg) {
-    setNote(msg);
+  function flash(message) {
+    setNote(message);
     setTimeout(() => setNote(''), 3000);
   }
 
   function toggle(chunk) {
     if (owned.has(chunk.id)) return;
     setNote('');
-    const idx = selected.indexOf(chunk.id);
-    if (idx !== -1) {
-      // clicking a selected chunk clears from it to the end of the run
-      setSelected(selected.slice(0, idx));
+    const index = selected.indexOf(chunk.id);
+    if (index !== -1) {
+      setSelected(selected.slice(0, index));
       return;
     }
     if (!selected.length) {
       setSelected([chunk.id]);
       return;
     }
-    const last = all.find((c) => c.id === selected[selected.length - 1]);
-    const first = all.find((c) => c.id === selected[0]);
-    const extendsEnd = last && chunk.startMin === last.endMin;
-    const extendsStart = first && chunk.endMin === first.startMin;
+    const last = all.find((item) => item.id === selected[selected.length - 1]);
+    const first = all.find((item) => item.id === selected[0]);
+    const extendsEnd = last && last.dayKey === chunk.dayKey && last.arena === chunk.arena && chunk.startMin === last.endMin;
+    const extendsStart = first && first.dayKey === chunk.dayKey && first.arena === chunk.arena && chunk.endMin === first.startMin;
     if (!extendsEnd && !extendsStart) {
       setSelected([chunk.id]);
       return;
@@ -73,124 +96,263 @@ export default function ChunkBrowser({ barnSlug, arenaSlug, chunksByDay, ownedId
     setSelected(extendsEnd ? [...selected, chunk.id] : [chunk.id, ...selected]);
   }
 
-  function changeDay(k) {
-    setDayKey(k);
+  function changeDay(key) {
+    setDayKey(key);
+    setFromMin(null);
+    setToMin(null);
     setSelected([]);
   }
 
+  function completeTestPurchase(payment) {
+    try {
+      const existing = readMockPurchases();
+      const purchasedAt = new Date().toISOString();
+      const purchaseGroup = `${barnSlug}-${selectedChunks[0].arena}-${selectedChunks[0].dayKey}-${Date.now()}`;
+      const newFolders = selectedChunks.map((chunk) => ({
+        ...chunk,
+        arenaName: chunk.arenaName,
+        minutes: CHUNK_MINUTES,
+        horse: chunk.label || 'Arena footage',
+        expires: new Date(new Date(chunk.availableUntil).getTime()).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        }),
+        owned: true,
+        videos: previewVideos,
+        names: folderNames(chunk, chunk.arenaName),
+        purchaseGroup,
+        payment: {
+          provider: 'stripe-test',
+          status: 'succeeded',
+          amountCents: Math.round(price * 100),
+          last4: payment.last4,
+          purchasedAt,
+        },
+      }));
+      const nextPurchases = [
+        ...existing.filter((purchase) => !newFolders.some((folder) => folder.id === purchase.id)),
+        ...newFolders,
+      ];
+      writeMockPurchases(nextPurchases);
+      setLocalOwnedIds((ids) => [...new Set([...ids, ...newFolders.map((folder) => folder.id)])]);
+      setCheckoutOpen(false);
+      setSelected([]);
+      router.push(`/${barnSlug}/my-videos`);
+      return null;
+    } catch (error) {
+      return `The mock purchase could not be saved: ${error.message}`;
+    }
+  }
+
+  const customTimeRange = fromMin !== null || toMin !== null;
+
   return (
     <div>
-      {/* filters ------------------------------------------------------ */}
-      <div className="rounded-2xl border border-ink/15 dark:border-oat/15 bg-white/50 dark:bg-oat/[0.03] p-4 flex flex-col lg:flex-row lg:items-center gap-4 mb-8">
-        <div className="flex items-center gap-2">
-          <span className="font-label text-[0.6rem] uppercase tracking-[0.18em] text-ink/60 dark:text-oat/55 mr-1">
-            Day
-          </span>
-          {days.map((d) => (
+      <div className="mb-8 grid gap-4 lg:grid-cols-[1fr_auto]">
+        <section className="rounded-2xl border border-ink/15 bg-white/60 p-4 dark:border-oat/15 dark:bg-oat/[0.03] md:p-5">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="font-label text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/55 dark:text-oat/55">
+                Choose a day
+              </p>
+              <p className="mt-1 text-[0.8rem] text-ink/60 dark:text-oat/55">
+                Footage from the last {PURCHASE_WINDOW_HOURS} hours
+              </p>
+            </div>
+            <i className="ph ph-calendar-blank text-xl text-hermes-ink dark:text-hermes-light" aria-hidden="true" />
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <button
-              key={d.key}
               type="button"
-              onClick={() => changeDay(d.key)}
-              className={`px-3.5 py-1.5 rounded-full font-label text-[0.76rem] border transition-colors ${
-                dayKey === d.key
+              onClick={() => changeDay('all')}
+              aria-pressed={dayKey === 'all'}
+              className={`flex min-h-14 items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-colors ${
+                dayKey === 'all'
                   ? 'border-hermes bg-hermes/15 text-hermes-ink dark:text-hermes-light'
-                  : 'border-ink/15 dark:border-oat/15 text-ink/65 dark:text-oat/55 hover:border-hermes/60'
+                  : 'border-ink/10 bg-white/50 text-ink/75 hover:border-hermes/60 dark:border-oat/10 dark:bg-oat/[0.02] dark:text-oat/75'
               }`}
             >
-              {d.short} · {d.label}
+              <span className="min-w-0">
+                <span className="block font-label text-[0.82rem] font-semibold">All available</span>
+                <span className="mt-0.5 block text-[0.72rem] text-ink/55 dark:text-oat/55">Last 48 hours</span>
+              </span>
+              <span className="shrink-0 rounded-full bg-ink/5 px-2 py-1 font-label text-[0.65rem] tabular-nums dark:bg-oat/10">
+                {dayOptions.reduce((total, day) => total + (chunksByDay[day.key]?.length || 0), 0)}
+              </span>
             </button>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-2 lg:border-l lg:border-ink/10 lg:dark:border-oat/10 lg:pl-4">
-          <span className="font-label text-[0.6rem] uppercase tracking-[0.18em] text-ink/60 dark:text-oat/55 mr-1">
-            Between
-          </span>
-          <TimeSelect value={fromMin} onChange={(v) => setFromMin(Math.min(v, toMin - CHUNK_MINUTES))} options={timeOptions.slice(0, -1)} />
-          <span className="text-ink/65 dark:text-oat/55 text-sm">and</span>
-          <TimeSelect value={toMin} onChange={(v) => setToMin(Math.max(v, fromMin + CHUNK_MINUTES))} options={timeOptions.slice(1)} />
-        </div>
-
-        <span className="lg:ml-auto font-label text-[0.68rem] text-ink/65 dark:text-oat/55">
-          {visible.length} of {all.length} · for sale {PURCHASE_WINDOW_HOURS} hours after recording
-        </span>
-      </div>
-
-      {/* chunk list ---------------------------------------------------- */}
-      <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-        {visible.map((c) => {
-          const isOwned = owned.has(c.id);
-          const isSel = selected.includes(c.id);
-          return (
-            <li key={c.id}>
-              {isOwned ? (
-                <Link
-                  href={`/${barnSlug}/${arenaSlug}/watch/${c.id}`}
-                  className="block rounded-xl border border-pine-lit/50 bg-pine-lit/10 p-4 hover:border-pine-lit transition-colors"
-                >
-                  <ChunkBody chunk={c} />
-                  <span className="mt-3 inline-flex items-center gap-1.5 font-label text-[0.72rem] font-semibold text-pine dark:text-pine-lit">
-                    Bought · Watch
-                    <i className="ph-bold ph-arrow-right text-xs" />
-                  </span>
-                </Link>
-              ) : (
+            {dayOptions.map((day) => {
+              const count = chunksByDay[day.key]?.length || 0;
+              const active = dayKey === day.key;
+              return (
                 <button
+                  key={day.key}
                   type="button"
-                  onClick={() => toggle(c)}
-                  aria-pressed={isSel}
-                  className={`w-full text-left rounded-xl border p-4 transition-colors ${
-                    isSel
-                      ? 'border-hermes bg-hermes/15'
-                      : 'border-ink/15 dark:border-oat/15 bg-white/50 dark:bg-oat/[0.03] hover:border-hermes/60'
+                  onClick={() => changeDay(day.key)}
+                  aria-pressed={active}
+                  className={`flex min-h-14 items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-colors ${
+                    active
+                      ? 'border-hermes bg-hermes/15 text-hermes-ink dark:text-hermes-light'
+                      : 'border-ink/10 bg-white/50 text-ink/75 hover:border-hermes/60 dark:border-oat/10 dark:bg-oat/[0.02] dark:text-oat/75'
                   }`}
                 >
-                  <ChunkBody chunk={c} />
-                  <span
-                    className={`mt-3 inline-flex items-center gap-1.5 font-label text-[0.72rem] font-semibold ${
-                      isSel ? 'text-hermes-ink dark:text-hermes-light' : 'text-ink/65 dark:text-oat/55'
-                    }`}
-                  >
-                    <i className={`${isSel ? 'ph-fill ph-check-circle' : 'ph ph-circle'} text-sm`} />
-                    {isSel ? 'Selected' : 'Select'}
+                  <span className="min-w-0">
+                    <span className="block font-label text-[0.82rem] font-semibold">{day.short}</span>
+                    <span className="mt-0.5 block text-[0.72rem] text-ink/55 dark:text-oat/55">{day.label}</span>
+                  </span>
+                  <span className={`shrink-0 rounded-full px-2 py-1 font-label text-[0.65rem] tabular-nums ${active ? 'bg-hermes/20' : 'bg-ink/5 dark:bg-oat/10'}`}>
+                    {count}
                   </span>
                 </button>
-              )}
-            </li>
-          );
-        })}
-      </ol>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-ink/15 bg-white/60 p-4 dark:border-oat/15 dark:bg-oat/[0.03] md:p-5 lg:min-w-[22rem]">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="font-label text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/55 dark:text-oat/55">
+                Narrow by time
+              </p>
+              <p className="mt-1 text-[0.8rem] text-ink/60 dark:text-oat/55">Select a start and end time</p>
+            </div>
+            <i className="ph ph-clock text-xl text-hermes-ink dark:text-hermes-light" aria-hidden="true" />
+          </div>
+          <div className="flex items-center gap-2">
+            <TimeSelect
+              label="Start time"
+              value={fromMin ?? bounds.start}
+              onChange={(value) => {
+                setFromMin(Math.min(value, (toMin ?? bounds.end) - CHUNK_MINUTES));
+                setSelected([]);
+              }}
+              options={timeOptions.slice(0, -1)}
+            />
+            <span className="font-label text-[0.7rem] text-ink/50 dark:text-oat/50">to</span>
+            <TimeSelect
+              label="End time"
+              value={toMin ?? bounds.end}
+              onChange={(value) => {
+                setToMin(Math.max(value, (fromMin ?? bounds.start) + CHUNK_MINUTES));
+                setSelected([]);
+              }}
+              options={timeOptions.slice(1)}
+            />
+          </div>
+          <div className="mt-3 flex min-h-6 items-center justify-between gap-3">
+            <p className="font-label text-[0.7rem] text-ink/60 dark:text-oat/55" aria-live="polite">
+              {visible.length} of {all.length} segments
+            </p>
+            {customTimeRange && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFromMin(null);
+                  setToMin(null);
+                  setSelected([]);
+                }}
+                className="font-label text-[0.7rem] font-semibold text-hermes-ink underline decoration-hermes/50 underline-offset-4 hover:decoration-hermes dark:text-hermes-light"
+              >
+                Show full day
+              </button>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {timeOfDaySections.map((section) => {
+        const sectionChunks = visible.filter((chunk) => section.contains(chunk.startMin));
+        return (
+          <details key={section.label} className="mb-4 rounded-2xl border border-ink/15 bg-white/40 dark:border-oat/15 dark:bg-oat/[0.02]">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-display text-xl marker:hidden">
+              <span>{section.label}</span>
+              <span className="inline-flex items-center gap-3 font-label text-[0.72rem] text-ink/55 dark:text-oat/55">
+                {sectionChunks.length} {sectionChunks.length === 1 ? 'segment' : 'segments'}
+                <i className="ph-bold ph-caret-down" aria-hidden="true" />
+              </span>
+            </summary>
+            {sectionChunks.length ? (
+              <ol className="grid grid-cols-1 gap-4 border-t border-ink/10 p-4 dark:border-oat/10 sm:grid-cols-2 xl:grid-cols-3">
+                {sectionChunks.map((chunk) => {
+                  const isOwned = owned.has(chunk.id);
+                  const isSelected = selected.includes(chunk.id);
+                  const title = segmentTitle(barnName, chunk.arenaName, chunk);
+                  const body = <ChunkBody chunk={chunk} title={title} />;
+                  return (
+                    <li key={chunk.id}>
+                      {isOwned ? (
+                        <Link
+                          href={`/${barnSlug}/${chunk.arena}/watch/${chunk.id}`}
+                          title={title}
+                          className="block h-full rounded-2xl border border-pine-lit/50 bg-pine-lit/10 p-4 transition-colors hover:border-pine-lit"
+                        >
+                          {body}
+                          <span className="mt-3 inline-flex items-center gap-1.5 font-label text-[0.72rem] font-semibold text-pine dark:text-pine-lit">
+                            Bought · Watch <i className="ph-bold ph-arrow-right text-xs" />
+                          </span>
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => toggle(chunk)}
+                          aria-pressed={isSelected}
+                          title={title}
+                          className={`block h-full w-full rounded-2xl border p-4 text-left transition-colors ${
+                            isSelected
+                              ? 'border-hermes bg-hermes/15'
+                              : 'border-ink/15 bg-white/60 hover:border-hermes/60 dark:border-oat/15 dark:bg-oat/[0.03]'
+                          }`}
+                        >
+                          {body}
+                          <span className={`mt-3 inline-flex items-center gap-1.5 font-label text-[0.72rem] font-semibold ${isSelected ? 'text-hermes-ink dark:text-hermes-light' : 'text-ink/65 dark:text-oat/55'}`}>
+                            <i className={`${isSelected ? 'ph-fill ph-check-circle' : 'ph ph-circle'} text-sm`} />
+                            {isSelected ? 'Selected' : 'Select segment'}
+                          </span>
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            ) : (
+              <p className="border-t border-ink/10 px-5 py-4 text-[0.82rem] text-ink/55 dark:border-oat/10 dark:text-oat/55">
+                No {section.label.toLowerCase()} footage is available for this selection.
+              </p>
+            )}
+          </details>
+        );
+      })}
 
       {visible.length === 0 && (
-        <p className="mt-6 text-ink/65 dark:text-oat/55 text-[0.92rem]">
-          Nothing in that range. Widen the times, or check the other day.
-        </p>
+        <div className="mt-5 rounded-2xl border border-dashed border-ink/20 p-8 text-center dark:border-oat/20">
+          <p className="font-display text-lg">No footage available for sale in this range</p>
+          <p className="mt-2 text-[0.86rem] text-ink/60 dark:text-oat/55">
+            Footage is listed for up to 48 hours after recording. Try another day or show the full day.
+          </p>
+        </div>
       )}
 
-      {/* purchase bar -------------------------------------------------- */}
       <div
-        className={`sticky bottom-4 mt-8 rounded-2xl border bg-ink text-oat shadow-rail p-4 md:p-5 transition-all ${
+        className={`sticky bottom-4 mt-8 rounded-2xl border bg-ink p-4 text-oat shadow-rail transition-all md:p-5 ${
           selectedChunks.length ? 'border-hermes/50 opacity-100' : 'border-oat/15 opacity-90'
         }`}
       >
-        <div className="flex flex-col md:flex-row md:items-center gap-4">
-          <div className="flex-1 min-w-0">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center">
+          <div className="min-w-0 flex-1">
             {selectedChunks.length ? (
               <>
                 <p className="font-display text-xl leading-tight">
                   {selectedChunks.length * CHUNK_MINUTES} minutes · {range}
                 </p>
-                <p className="mt-1 text-oat/65 text-[0.84rem]">
-                  {selectedChunks.length} {selectedChunks.length === 1 ? 'folder' : 'folders'} ·
-                  every camera in the arena comes with it · {money(price)}
+                <p className="mt-1 text-[0.84rem] text-oat/65">
+                  {selectedChunks.length} {selectedChunks.length === 1 ? 'segment' : 'segments'} · three camera angles · {money(price)}
                 </p>
               </>
             ) : (
               <>
-                <p className="font-display text-xl leading-tight">Select up to an hour</p>
-                <p className="mt-1 text-oat/65 text-[0.84rem]">
-                  Pick the chunks you rode in, in a row. A purchase is always every camera in the
-                  arena.
+                <p className="font-display text-xl leading-tight">Select up to 60 minutes</p>
+                <p className="mt-1 text-[0.84rem] text-oat/65">
+                  Choose up to four consecutive 15-minute segments.
                 </p>
               </>
             )}
@@ -198,58 +360,90 @@ export default function ChunkBrowser({ barnSlug, arenaSlug, chunksByDay, ownedId
 
           <input
             value={discount}
-            onChange={(e) => setDiscount(e.target.value)}
+            onChange={(event) => setDiscount(event.target.value)}
             placeholder="Discount code"
             aria-label="Discount code"
-            className="rounded-full border border-oat/20 bg-transparent px-4 py-2.5 font-label text-[0.8rem] text-oat placeholder:text-oat/55 focus:outline-none focus:border-hermes md:w-40"
+            className="rounded-full border border-oat/20 bg-transparent px-4 py-2.5 font-label text-[0.8rem] text-oat placeholder:text-oat/55 focus:border-hermes focus:outline-none md:w-40"
           />
 
           <button
             type="button"
             disabled={!selectedChunks.length}
-            onClick={() => flash('Mockup — no payment is taken. In the product this opens checkout.')}
-            className="btn-hermes rounded-full px-6 py-3 font-label text-sm font-semibold shadow-hermes-md disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+            onClick={() => setCheckoutOpen(true)}
+            className="btn-hermes whitespace-nowrap rounded-full px-6 py-3 font-label text-sm font-semibold shadow-hermes-md disabled:cursor-not-allowed disabled:opacity-40"
           >
             {selectedChunks.length ? `Buy for ${money(price)}` : 'Buy'}
           </button>
         </div>
 
         {note && (
-          <p className="mt-3 font-label text-[0.78rem] text-hermes-light animate-rise" role="status">
-            <i className="ph-fill ph-flask mr-1.5" />
-            {note}
+          <p className="mt-3 font-label text-[0.78rem] text-hermes-light" role="status">
+            <i className="ph-fill ph-flask mr-1.5" />{note}
           </p>
         )}
       </div>
+      {checkoutOpen && (
+        <StripeTestCheckout
+          amount={price}
+          onClose={() => setCheckoutOpen(false)}
+          onSuccess={completeTestPurchase}
+        />
+      )}
     </div>
   );
 }
 
-function ChunkBody({ chunk }) {
+function segmentTitle(barnName, arenaName, chunk) {
+  const date = new Date(`${chunk.iso}T12:00:00`).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  return `${barnName} (${arenaName}) - ${date} at ${chunk.start} - ${chunk.end} (${chunk.durationMinutes} min)`;
+}
+
+function ChunkBody({ chunk, title }) {
+  const date = new Date(`${chunk.iso}T12:00:00`).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
   return (
     <>
-      <p className="font-label text-[0.86rem] font-semibold text-ink dark:text-oat tabular-nums">
-        {chunk.start} – {chunk.end}
+      <p className="break-words font-display text-[1.02rem] leading-snug text-ink dark:text-oat" aria-label={title}>
+        {chunk.label || 'Recorded footage'} · {chunk.arenaName}
       </p>
-      <p className="mt-1 text-[0.8rem] leading-snug text-ink/65 dark:text-oat/55">
-        {chunk.label || 'Recorded · unlabelled'}
+      <p className="mt-2 text-[0.78rem] leading-snug text-ink/60 dark:text-oat/55">
+        {date} · {chunk.start}–{chunk.end}
       </p>
     </>
   );
 }
 
-function TimeSelect({ value, onChange, options }) {
+const timeOfDaySections = [
+  { label: 'Morning', contains: (minute) => minute < 12 * 60 },
+  { label: 'Afternoon', contains: (minute) => minute >= 12 * 60 && minute < 17 * 60 },
+  { label: 'Evening', contains: (minute) => minute >= 17 * 60 },
+];
+
+function TimeSelect({ label, value, onChange, options }) {
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(Number(e.target.value))}
-      className="rounded-full border border-ink/15 dark:border-oat/20 bg-white dark:bg-ink px-3 py-1.5 font-label text-[0.76rem] text-ink dark:text-oat focus:outline-none focus:border-hermes"
-    >
-      {options.map((m) => (
-        <option key={m} value={m}>
-          {minutesToClock(m)}
-        </option>
-      ))}
-    </select>
+    <label className="min-w-0 flex-1">
+      <span className="sr-only">{label}</span>
+      <span className="relative block">
+        <i className="ph ph-clock absolute left-3 top-1/2 -translate-y-1/2 text-sm text-hermes-ink dark:text-hermes-light" aria-hidden="true" />
+        <select
+          value={value}
+          onChange={(event) => onChange(Number(event.target.value))}
+          className="w-full appearance-none rounded-xl border border-ink/15 bg-white py-3 pl-9 pr-8 font-label text-[0.78rem] font-semibold text-ink focus:border-hermes focus:outline-none focus:ring-2 focus:ring-hermes/20 dark:border-oat/20 dark:bg-ink dark:text-oat"
+        >
+          {options.map((minute) => (
+            <option key={minute} value={minute}>{minutesToClock(minute)}</option>
+          ))}
+        </select>
+        <i className="ph ph-caret-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink/50 dark:text-oat/50" aria-hidden="true" />
+      </span>
+    </label>
   );
 }
