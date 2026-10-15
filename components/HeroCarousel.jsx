@@ -41,8 +41,16 @@ export default function HeroCarousel() {
           <img
             src={media[slide.image]}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover object-center"
+            className={`absolute inset-x-0 bottom-0 w-full object-cover ${
+              slide.imageTop ? 'top-28 h-[calc(100%-7rem)] object-top' : 'top-0 h-full object-center'
+            }`}
           />
+          {slide.imageTop && (
+            <div
+              className="absolute inset-x-0 top-28 h-24"
+              style={{ background: 'linear-gradient(180deg, rgba(8,17,13,1) 0%, rgba(8,17,13,0) 100%)' }}
+            />
+          )}
           {/* Pine scrim rather than black — the ground colour carries through. */}
           <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(8,17,13,0.96) 0%, rgba(8,17,13,0.90) 34%, rgba(8,17,13,0.62) 64%, rgba(8,17,13,0.18) 100%)' }} />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, rgba(8,17,13,0.80) 0%, rgba(8,17,13,0.25) 45%, rgba(8,17,13,0.10) 100%)' }} />
