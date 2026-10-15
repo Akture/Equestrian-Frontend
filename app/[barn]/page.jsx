@@ -24,14 +24,13 @@ export default async function BarnPage({ params }) {
   const barn = getBarn(slug);
   if (!barn) notFound();
 
+  const { arena } = barn;
   const dayOptions = getRecentDays();
   const chunksByDay = Object.fromEntries(
     dayOptions.map((day) => [
       day.key,
-      barn.arenas.flatMap((arena) =>
-        availableChunksForDay(slug, arena.slug, day.key, new Date(), dayOptions)
-          .map((chunk) => ({ ...chunk, arenaName: arena.name }))
-      ),
+      availableChunksForDay(slug, arena.slug, day.key, new Date(), dayOptions)
+        .map((chunk) => ({ ...chunk, arenaName: arena.name })),
     ])
   );
   const ownedIds = purchasesForBarn(slug).map((purchase) => purchase.id);
@@ -63,15 +62,13 @@ export default async function BarnPage({ params }) {
             </h1>
             <p className="mt-3 text-oat/60 text-[0.94rem]">{barn.city}</p>
             <p className="mt-6 text-oat/70 leading-relaxed max-w-lg">{barn.blurb}</p>
-            {barn.slug === 'aubreymeadows' && (
+            {barn.availability && (
               <div className="mt-6 max-w-lg rounded-xl border border-oat/20 bg-ink/30 p-4">
                 <p className="font-label text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-hermes-light">
                   Footage availability
                 </p>
                 <p className="mt-2 text-[0.88rem] leading-relaxed text-oat/80">
-                  Monday to Friday: 8am to 5pm · Saturday &amp; Sunday: 9am to 12pm.
-                  Any changes to footage availability will be reflected here. Footage is
-                  available for sale for up to 48 hours after recording.
+                  {barn.availability}
                 </p>
               </div>
             )}
@@ -85,7 +82,7 @@ export default async function BarnPage({ params }) {
             <div>
               <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-4">
                 <span className="w-6 h-px bg-hermes" aria-hidden="true" />
-                Available footage
+                {arena.name} · {arena.dims} · {arena.surface}
               </p>
               <h2 className="font-display text-[1.85rem] md:text-[2.3rem] leading-tight">
                 Find and purchase your ride
@@ -112,7 +109,7 @@ export default async function BarnPage({ params }) {
             The cameras
           </p>
           <h2 className="font-display text-[1.85rem] md:text-[2.3rem] leading-tight text-oat max-w-xl">
-            The same cameras in every arena here
+            The cameras in this arena
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">

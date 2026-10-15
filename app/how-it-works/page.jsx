@@ -102,7 +102,7 @@ export default function HowItWorksPage() {
               Ready to purchase footage?
             </h2>
             <p className="text-ink/65 dark:text-oat/55 mb-8 leading-relaxed">
-              Log in or create an account to browse the footage available at Aubrey Meadows.
+              Log in or create an account to browse the footage available at your barn.
             </p>
             <Link
               href="/access"

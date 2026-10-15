@@ -80,7 +80,7 @@ export default function Header({ barn = null }) {
             </Link>
 
             <Link
-              href={barn ? `/${barn.slug}` : '/aubreymeadows'}
+              href={barn ? `/${barn.slug}` : '/demo'}
               className="btn-hermes px-5 py-2.5 rounded-full font-label text-[0.82rem] font-semibold whitespace-nowrap shadow-hermes-sm"
             >
               Purchase footage
@@ -117,7 +117,7 @@ export default function Header({ barn = null }) {
             </div>
 
             <Link
-              href={barn ? `/${barn.slug}` : '/aubreymeadows'}
+              href={barn ? `/${barn.slug}` : '/demo'}
               onClick={() => setOpen(false)}
               className="btn-hermes px-5 py-3 rounded-full font-label text-sm font-semibold text-center"
             >

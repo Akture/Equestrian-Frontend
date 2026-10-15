@@ -24,16 +24,16 @@ npm run build    # runs the guardrail first, then next build — same on Vercel
 | `/faq` | Eleven questions, including who can see footage and how long it stays |
 | `/barns` | The barns we are in, and how a barn comes online |
 | `/access` | Create an account with email/password, log in, or use the mock Google sign-in |
-| `/[barn]` | **The purchase page.** All available 15-minute footage segments from the barn's arenas |
+| `/[barn]` | **The purchase page.** All available 15-minute footage segments from the barn's arena |
 | `/[barn]/[arena]` | Redirects to the barn purchase page |
 | `/[barn]/[arena]/watch/[folder]` | **The player.** Purchased folders and the demo multi-camera preview |
 | `/[barn]/my-videos` | Purchases as folders of three angles: rename, delete, combine, play in order, download |
 | `/[barn]/profile` | The mock account, and log out |
 | `/[barn]/support` | A form that opens a real email to `contact@akture.video` |
 
-Create an account or use the mock Google sign-in on `/access` to open Aubrey Meadows. The
-account is stored in this browser only; there is no production authentication provider connected
-yet. Aubrey Meadows carries the fuller worked example: mock footage, three camera angles, and
+Create an account or use the mock Google sign-in on `/access` to open the Demo Barn
+(`/demo`). The account is stored in this browser only; there is no production authentication
+provider connected yet. The Demo Barn carries the worked example: mock footage, three camera angles, and
 seeded purchases in My Videos.
 Seeded purchased folders use local sample MP4s from `public/videos/` to exercise playback and
 downloads; they stand in for the signed camera-angle URLs supplied by a production backend.
@@ -41,17 +41,18 @@ downloads; they stand in for the signed camera-angle URLs supplied by a producti
 ## The product, as built here
 
 - **Access.** The barn code is not required. Email/password account creation, login, and Google
-  sign-in are mocked in the browser and redirect to Aubrey Meadows. Production OAuth and account
+  sign-in are mocked in the browser and redirect to the Demo Barn. Production OAuth and account
   services still need to be connected.
 - **Buying.** Footage is sold in **15-minute chunks**, listed for **48 hours** after recording.
-  The barn page lists every arena together; footage is ordered earliest-first within each day and
+  **One arena per barn:** at launch Akture installs in a single arena at each location, so the
+  barn page is the purchase page for that arena (`barn.arena` in `lib/barns.js`). Footage is ordered earliest-first within each day and
   grouped into collapsed Morning, Afternoon, and Evening sections. A purchase is one to four
-  contiguous chunks from one arena — an hour, max — and always includes **every camera in that
+  contiguous chunks — an hour, max — and always includes **every camera in that
   arena.** Tiers: 0–15 min $15.99 · 16–30 min $24.99 · 31–60 min $39.99. A discount-code
   field is on the purchase bar. The checkout mock accepts Stripe test card `4242 4242 4242 4242`
   and simulates decline for `4000 0000 0000 9995`; successful folders are saved in browser
   storage and immediately open My Videos. No live Stripe API calls or card data storage are used.
-- **Availability.** Aubrey Meadows footage is scheduled Monday to Friday, 8am–5pm, and Saturday
+- **Availability.** Demo Barn footage is scheduled Monday to Friday, 8am–5pm, and Saturday
   and Sunday, 9am–12pm. The day filter starts on **All available** (earliest first within each day) and can narrow
   to Today, Yesterday, or 2 Days ago. The time filter narrows the selected day.
 - **Footage assets.** Mock segments expose a stable `recordingId`, `recordedAt`, `availableUntil`,
@@ -64,7 +65,7 @@ downloads; they stand in for the signed camera-angle URLs supplied by a producti
 
   | Where | Name |
   |---|---|
-  | Folder, on screen | `Aubrey Meadows (Covered Arena) - September 16, 2026 at 4:00 PM - 4:15 PM (15 min)` |
+  | Folder, on screen | `Demo Barn (Covered Arena) - September 16, 2026 at 4:00 PM - 4:15 PM (15 min)` |
   | Zip | `2026-09-16_1600-1615_CoveredArena.zip` |
   | Files inside | `2026-09-16_1600-1615_CoveredArena_LongSide.mp4` · `…_GateEnd.mp4` · `…_FarEnd.mp4` |
 
@@ -120,7 +121,7 @@ are dark text on the orange — white on `#F37021` is 2.89:1 and fails WCAG AA.
 - WCAG AA contrast on every page in both light and dark, including text over photos checked
   against the worst case of a pure-white image, with a scanner proven against planted failures.
 - Purchase flow: selection, tier pricing, the four-chunk cap, non-adjacent restart, the filter.
-- Access: email signup, login, and mock Google sign-in open Aubrey Meadows; barn routes require a
+- Access: email signup, login, and mock Google sign-in open the Demo Barn; barn routes require a
   browser mock account.
 - Player: seek, angle switch holds the clock, play-through advances to the next folder, N/P,
   all-three buffering note.
