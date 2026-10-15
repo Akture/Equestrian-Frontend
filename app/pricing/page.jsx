@@ -3,9 +3,9 @@ import Ticker from '@/components/Ticker';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SectionHeading from '@/components/SectionHeading';
-import PricingTiers from '@/components/PricingTiers';
+import PricingTeaser from '@/components/PricingTeaser';
 import { pricingCopy, tickerLines } from '@/lib/copy';
-import { hardCapNote, includedInEveryWindow } from '@/lib/pricing';
+import { includedInEveryWindow } from '@/lib/pricing';
 import { media } from '@/lib/media';
 
 export const metadata = { title: 'Pricing — Akture Equestrian' };
@@ -20,7 +20,7 @@ export default function PricingPage() {
         <section className="relative px-6 md:px-12 pb-16">
           <div className="absolute inset-0 bg-hatch opacity-60 pointer-events-none" />
           <div className="relative max-w-3xl mx-auto text-center">
-            <p className="flex items-center justify-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-5">
+            <p className="flex items-center justify-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-5">
               <span className="w-6 h-px bg-hermes" aria-hidden="true" />
               {pricingCopy.eyebrow}
             </p>
@@ -33,25 +33,14 @@ export default function PricingPage() {
 
         <section className="px-6 md:px-12 pb-20">
           <div className="max-w-6xl mx-auto">
-            <PricingTiers />
-
-            <ul className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
-              {pricingCopy.tierNotes.map((note) => (
-                <li
-                  key={note}
-                  className="rounded-xl border border-ink/10 dark:border-oat/15 px-5 py-4 text-[0.86rem] leading-relaxed text-ink/60 dark:text-oat/55"
-                >
-                  {note}
-                </li>
-              ))}
-            </ul>
+            <PricingTeaser />
           </div>
         </section>
 
         {/* What comes with every window ----------------------------------- */}
         <section className="py-20 bg-pine-deep text-oat">
           <div className="max-w-5xl mx-auto px-6 md:px-12">
-            <SectionHeading eyebrow="In every window" heading="What comes with any length you buy" align="left" onDark className="mb-10" />
+            <SectionHeading eyebrow="With every video" heading="What comes with every purchase" align="left" onDark className="mb-10" />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4">
               {includedInEveryWindow.map((item) => (
@@ -63,10 +52,6 @@ export default function PricingPage() {
                 </div>
               ))}
             </div>
-
-            <p className="mt-10 border-l-2 border-hermes pl-5 py-1 text-oat/65 text-[0.88rem] leading-relaxed">
-              {hardCapNote}
-            </p>
           </div>
         </section>
 

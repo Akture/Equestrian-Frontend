@@ -3,30 +3,14 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SectionHeading from '@/components/SectionHeading';
 import BarnCard from '@/components/BarnCard';
-import DemoRibbon from '@/components/DemoRibbon';
-import { tickerLines } from '@/lib/copy';
+import { barnSteps, tickerLines } from '@/lib/copy';
 import { barns } from '@/lib/barns';
 import { media } from '@/lib/media';
 
 export const metadata = { title: 'Partner barns — Akture Equestrian' };
 
-const steps = [
-  {
-    icon: 'ph ph-path',
-    title: 'We walk the arena',
-    desc: 'Dimensions, sight lines, power, and where the internet actually reaches. Covered and outdoor rings are scoped separately.',
-  },
-  {
-    icon: 'ph ph-wrench',
-    title: 'The cameras go in',
-    desc: 'A wide camera down the long side and one at each end, mounted once and pointed once. Your staff have nothing to charge, carry, or aim.',
-  },
-  {
-    icon: 'ph ph-link-simple',
-    title: 'Your page goes live',
-    desc: 'equestrian.akture.video and your barn name. Clients sign in or create an account to open their barn page.',
-  },
-];
+// Mock barns stay off the public page until real barns are signed (10/13 review).
+const liveBarns = barns.filter((barn) => barn.live);
 
 export default function BarnsPage() {
   return (
@@ -37,45 +21,45 @@ export default function BarnsPage() {
       <main className="pt-36">
         <section className="px-6 md:px-12 pb-14">
           <div className="max-w-3xl mx-auto text-center">
-            <p className="flex items-center justify-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-5">
+            <p className="flex items-center justify-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-5">
               <span className="w-6 h-px bg-hermes" aria-hidden="true" />
               Barns
             </p>
             <h1 className="font-display text-[2.4rem] md:text-[3.2rem] leading-[1.08] text-ink dark:text-oat">
-              The barns we are in
+              Akture in your arena
             </h1>
             <p className="mt-6 text-ink/65 dark:text-oat/60 leading-relaxed">
-              Each barn has its own page. Riders sign in to reach their barn’s arenas and footage.
+              Fixed cameras in your arena, footage your clients can find in minutes, and nothing
+              for your staff to manage.
             </p>
-            <div className="flex justify-center mt-7">
-              <DemoRibbon />
-            </div>
           </div>
         </section>
 
-        <section className="px-6 md:px-12 pb-24">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-            {barns.map((barn) => (
-              <BarnCard key={barn.slug} barn={barn} />
-            ))}
-          </div>
-        </section>
+        {liveBarns.length > 0 && (
+          <section className="px-6 md:px-12 pb-24">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+              {liveBarns.map((barn) => (
+                <BarnCard key={barn.slug} barn={barn} />
+              ))}
+            </div>
+          </section>
+        )}
 
         <section id="bring-akture" className="py-24 bg-pine-deep text-oat scroll-mt-24">
           <div className="max-w-7xl mx-auto px-6 md:px-12">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-20 items-center">
               <div>
                 <SectionHeading
-                  eyebrow="Bring Akture to your arena"
-                  heading="How a barn comes online"
-                  sub="We are spacing the first installs about a month apart so each one teaches us something before the next."
+                  eyebrow="How to get started"
+                  heading="A painless process"
+                  sub="From the first call to footage in your clients’ hands, in four steps."
                   align="left"
                   onDark
                   className="mb-10"
                 />
 
                 <div className="space-y-7">
-                  {steps.map((s) => (
+                  {barnSteps.map((s) => (
                     <div key={s.title} className="flex gap-4">
                       <span className="w-10 h-10 shrink-0 rounded-lg border border-hermes/40 bg-hermes/10 text-hermes-light flex items-center justify-center">
                         <i className={`${s.icon} text-base`} />

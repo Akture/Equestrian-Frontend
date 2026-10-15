@@ -23,7 +23,7 @@ export default function AccessPage() {
               <p className="font-display text-2xl leading-snug text-oat">
                 Sign in or create an account to open your barn and purchase footage.
               </p>
-              <p className="mt-5 font-label text-[0.68rem] uppercase tracking-[0.18em] text-hermes-light">
+              <p className="mt-5 font-label text-[0.85rem] uppercase tracking-[0.18em] text-hermes-light">
                 How access works
               </p>
             </blockquote>
@@ -32,7 +32,7 @@ export default function AccessPage() {
 
         <div className="flex items-center justify-center px-6 md:px-12 py-20">
           <div className="w-full max-w-md">
-            <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-4">
+            <p className="flex items-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-4">
               <span className="w-6 h-px bg-hermes" aria-hidden="true" />
               {accessCopy.eyebrow}
             </p>

@@ -8,7 +8,7 @@ export default function DemoActionButton({ label, icon, className = '', tone = '
   const [note, setNote] = useState('');
 
   function press() {
-    setNote(`${label} is not wired up in this mockup.`);
+    setNote(`${label} is coming soon.`);
     setTimeout(() => setNote(''), 3000);
   }
 
@@ -29,8 +29,7 @@ export default function DemoActionButton({ label, icon, className = '', tone = '
       </button>
       {note && (
         <p className="mt-2 font-label text-[0.74rem] text-hermes-ink dark:text-hermes-light animate-rise" role="status">
-          <i className="ph-fill ph-flask mr-1" />
-          {note}
+                    {note}
         </p>
       )}
     </div>

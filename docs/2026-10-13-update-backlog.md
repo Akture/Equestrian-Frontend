@@ -17,6 +17,37 @@ goes to `main` as one PR once approved.*
 - [x] Every bit of barn-code text that asked people to enter a code is gone; Aryan's merge
   took care of that. The search in section A finds none of it.
 
+**Built on `zane` (2026-10-15), live at aktureequestrian.vercel.app.** Everything below is
+done except the items marked "Still open":
+- **A.** Removed the "private page" wording from the homepage, `barnFeatures`, the barns
+  page, the FAQ and the profile.
+- **B.** Ana's families and trainers lines are in, word for word. The barns card uses the
+  draft line, still waiting for Ana's approval.
+- **C1. Sizing.** The root font is now 18px, so all text, buttons and spacing are about 12%
+  bigger. Small labels now start at 0.85rem; they were 0.62rem. Section headings, nav text
+  and the scrollbar (now 12px) are bigger too. Left alone: the player controls, which are
+  Aryan's.
+- **C2.** Hero arrows now sit either side of the markers.
+- **C3.** Pricing is the teaser on both the homepage and `/pricing` ("Starting at $15", "One
+  installation fee"). Time tiers are gone from the ticker, pricing and FAQ. The checkout
+  still charges the mock tier prices; that's Skyler's purchase-page revision.
+- **C4.** The barn carousel and the barns-page grid show only barns marked `live: true`.
+  None are, so both are hidden. Removed: the "Mockup — sample data" labels, the footer
+  disclaimer, and the "not wired up" notices (now "coming soon"). "How a barn comes online"
+  is now "How to get started / A painless process", in four steps. The multi-camera section
+  has new copy (a draft for Ana) and shows real frames from the player's sample clips.
+- **C5.** The barn value points are rewritten.
+- **C6.** The header follows sign-in on every page: signed out shows the public nav, signed
+  in shows My Videos and Support. The footer social links are gone.
+- **C7.** How it works now covers both riders and barns, with the new rider step wording and
+  a link to the player demo.
+- **C8.** The support page's long FAQ answers are cut down to a link. The FAQ toggle is
+  centred and bigger.
+
+**Still open:** CTA destinations (open question 1), the barns card line and multi-camera
+copy (Ana, open question 2), how riders reach their barn (open question 3), and the real
+30-second clip (open question 4).
+
 **Sources**
 - **A.** The infrastructure shift: no dedicated barn codes.
 - **B.** Ana's copy notes (Slack, 2026-10-13, 9:58 PM).

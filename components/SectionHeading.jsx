@@ -22,7 +22,7 @@ export default function SectionHeading({
     <div className={`max-w-2xl ${alignment} ${className}`}>
       {eyebrow && (
         <p
-          className={`flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] mb-4 ${eyebrowColour} ${
+          className={`flex items-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] mb-4 ${eyebrowColour} ${
             align === 'left' ? '' : 'justify-center'
           }`}
         >
@@ -31,11 +31,11 @@ export default function SectionHeading({
         </p>
       )}
 
-      <h2 className={`font-display text-[1.85rem] leading-tight md:text-[2.4rem] ${headingColour}`}>
+      <h2 className={`font-display text-[2.1rem] leading-tight md:text-[2.75rem] ${headingColour}`}>
         {heading}
       </h2>
 
-      {sub && <p className={`mt-4 leading-relaxed ${subColour}`}>{sub}</p>}
+      {sub && <p className={`mt-4 text-lg leading-relaxed ${subColour}`}>{sub}</p>}
     </div>
   );
 }

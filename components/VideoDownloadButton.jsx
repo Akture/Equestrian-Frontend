@@ -89,7 +89,7 @@ export default function VideoDownloadButton({
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="font-label text-[0.62rem] uppercase tracking-[0.2em] text-hermes-light">Keep your footage</p>
+                <p className="font-label text-[0.85rem] uppercase tracking-[0.2em] text-hermes-light">Keep your footage</p>
                 <h2 id="download-options-title" className="mt-2 font-display text-2xl">Choose camera angles</h2>
                 <p className="mt-2 text-[0.84rem] leading-relaxed text-oat/65">
                   {downloads.length > 1

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { feeds } from '@/lib/media';
+import { feeds, previewVideos } from '@/lib/media';
 import { multiCam } from '@/lib/copy';
 import { formatClock } from '@/lib/clock';
 
@@ -26,7 +26,7 @@ export default function MultiCamShowcase() {
       <div className="max-w-7xl mx-auto px-6 md:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-14 lg:gap-20 items-center">
           <div>
-            <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-light mb-4">
+            <p className="flex items-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-hermes-light mb-4">
               <span className="w-6 h-px bg-hermes" aria-hidden="true" />
               {multiCam.eyebrow}
             </p>
@@ -53,7 +53,7 @@ export default function MultiCamShowcase() {
               href="/demo/covered/watch/player-preview"
               className="mt-10 inline-flex items-center gap-2 btn-hermes px-6 py-3 rounded-full font-label text-sm font-semibold shadow-hermes-md"
             >
-              Open the player
+              Try the player
               <i className="ph-bold ph-arrow-right text-sm" />
             </Link>
           </div>
@@ -67,12 +67,21 @@ export default function MultiCamShowcase() {
                   className="relative rounded-lg overflow-hidden border border-oat/10"
                   style={{ aspectRatio: '16 / 9' }}
                 >
-                  <img src={f.poster} alt="" className="w-full h-full object-cover" />
-                  <span className="absolute inset-0 bg-ink/30" />
-                  <span className="absolute top-1.5 left-2 font-label text-[0.52rem] uppercase tracking-[0.14em] text-oat/85">
+                  {/* A real frame from the player's sample clips (10/13 review). */}
+                  <video
+                    src={`${previewVideos[f.id]}#t=4`}
+                    poster={f.poster}
+                    preload="metadata"
+                    muted
+                    playsInline
+                    aria-hidden="true"
+                    className="w-full h-full object-cover"
+                  />
+                  <span className="absolute inset-0 bg-ink/20" />
+                  <span className="absolute top-1.5 left-2 font-label text-[0.7rem] uppercase tracking-[0.14em] text-oat/90">
                     {f.label}
                   </span>
-                  <span className="absolute bottom-1.5 right-2 font-label text-[0.56rem] tabular-nums text-oat/80">
+                  <span className="absolute bottom-1.5 right-2 font-label text-[0.7rem] tabular-nums text-oat/85">
                     {formatClock(wall, true)}
                   </span>
                 </div>
