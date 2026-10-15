@@ -29,8 +29,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <SectionHeading
             eyebrow="For riders and families"
-            heading="Finding your ride takes a few seconds"
-            sub="You buy a stretch of time in one arena. Everything below is about getting you to the part you care about."
+            heading="Find your ride in seconds"
+            sub="Pick the day, pick the time you rode, and watch every angle. Nobody has to stand at the rail with a phone."
             className="mb-16"
           />
           <FeatureGrid items={riderFeatures} />
@@ -45,7 +45,7 @@ export default function HomePage() {
           <SectionHeading
             eyebrow="For barns"
             heading="Video your clients want, with nothing for you to manage"
-            sub="The cameras go in once. Nothing about the barn’s day changes."
+            sub="The cameras go in once, and your riders take it from there."
             onDark
             className="mb-16"
           />
@@ -67,7 +67,7 @@ export default function HomePage() {
               href="/barns#bring-akture"
               className="btn-hermes inline-flex items-center gap-2 px-6 py-3 rounded-full font-label text-sm font-semibold shadow-hermes-md"
             >
-              Talk to us about your arena
+              Talk to us about your ring
               <i className="ph-bold ph-arrow-right text-sm" />
             </Link>
           </div>
@@ -128,11 +128,11 @@ export default function HomePage() {
         <div className="absolute inset-0" style={{ background: 'rgba(8,17,13,0.88)' }} />
         <div className="relative max-w-3xl mx-auto px-6 text-center">
           <h2 className="font-display text-[1.9rem] md:text-[2.5rem] leading-tight text-oat mb-5">
-            Want the cameras in your arena?
+            Want the cameras in your ring?
           </h2>
           <p className="text-oat/70 leading-relaxed mb-9">
-            We are installing at our first barns now, and spacing them out so each one teaches us
-            something before the next. If your arena hosts lessons or shows, we would like to walk it.
+            We are installing at our first barns now. If your ring hosts lessons or shows, we would
+            like to come and see it.
           </p>
           <Link
             href="/barns#bring-akture"

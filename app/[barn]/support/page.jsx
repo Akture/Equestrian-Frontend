@@ -36,7 +36,7 @@ export default async function SupportPage({ params }) {
             </p>
             <h1 className="font-display text-[2.2rem] md:text-[2.8rem] leading-tight">Contact support</h1>
             <p className="mt-4 mb-10 text-ink/65 dark:text-oat/60 leading-relaxed max-w-lg">
-              Tell us the day and the time and we can usually find it the same day.
+              Tell us the day and the time you rode, and we can usually sort it out the same day.
             </p>
             <SupportForm barn={{ slug: barn.slug, name: barn.name }} />
           </div>

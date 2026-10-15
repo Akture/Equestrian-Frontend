@@ -26,11 +26,11 @@ export default function BarnsPage() {
               Barns
             </p>
             <h1 className="font-display text-[2.4rem] md:text-[3.2rem] leading-[1.08] text-ink dark:text-oat">
-              Akture in your arena
+              Akture in your ring
             </h1>
             <p className="mt-6 text-ink/65 dark:text-oat/60 leading-relaxed">
-              Fixed cameras in your arena, footage your clients can find in minutes, and nothing
-              for your staff to manage.
+              Fixed cameras in your ring, footage your riders can find in minutes, and nothing for
+              your staff to manage.
             </p>
           </div>
         </section>
@@ -76,17 +76,17 @@ export default function BarnsPage() {
 
                 <div className="mt-10 border-l-2 border-hermes pl-5 py-1">
                   <p className="text-oat/65 text-[0.88rem] leading-relaxed">
-                    Barn connectivity is the one thing we cannot guess from a photo. Some arenas will
-                    need a dedicated uplink or a local recorder on site, and we would rather find that
-                    on the walk-through than after the first show.
+                    The one thing we cannot tell from a photo is your internet. Some rings need a
+                    connection of their own, and we would rather find that out on the site visit than
+                    at your first show.
                   </p>
                 </div>
 
                 <a
-                  href="mailto:contact@akture.video?subject=Akture%20Equestrian%20—%20our%20arena"
+                  href="mailto:contact@akture.video?subject=Akture%20Equestrian%20—%20our%20ring"
                   className="mt-10 inline-flex items-center gap-2 btn-hermes px-6 py-3 rounded-full font-label text-sm font-semibold shadow-hermes-md"
                 >
-                  Email us about your arena
+                  Email us about your ring
                   <i className="ph-bold ph-arrow-right text-sm" />
                 </a>
               </div>

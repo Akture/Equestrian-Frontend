@@ -99,7 +99,7 @@ export default async function BarnPage({ params }) {
         </div>
       </Section>
 
-      {/* What sits in each arena, in one line per camera. */}
+      {/* The three cameras, one line each. */}
       <Section tone="pine" className="py-20">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <p className="flex items-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-hermes-light mb-4">
@@ -107,7 +107,7 @@ export default async function BarnPage({ params }) {
             The cameras
           </p>
           <h2 className="font-display text-[1.85rem] md:text-[2.3rem] leading-tight text-oat max-w-xl">
-            The cameras in this arena
+            The cameras in this ring
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">

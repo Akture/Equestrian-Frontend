@@ -112,7 +112,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
         ...chunk,
         arenaName: chunk.arenaName,
         minutes: CHUNK_MINUTES,
-        horse: chunk.label || 'Arena footage',
+        horse: chunk.label || 'Ring footage',
         expires: new Date(new Date(chunk.availableUntil).getTime()).toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',

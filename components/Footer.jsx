@@ -14,7 +14,7 @@ const columns = [
   {
     heading: 'Barns',
     links: [
-      { label: 'Bring Akture to your arena', href: '/barns#bring-akture' },
+      { label: 'Bring Akture to your ring', href: '/barns#bring-akture' },
       { label: 'What we install', href: '/how-it-works#what-we-install' },
       { label: 'Pricing', href: '/pricing' },
       { label: 'FAQ', href: '/faq' },
@@ -39,7 +39,7 @@ export default function Footer() {
             <Logo className="mb-6" />
 
             <p className="text-ink/60 dark:text-oat/55 text-sm leading-relaxed max-w-sm">
-              Arena cameras that record your lessons and your classes, so you can watch the
+              Cameras in the ring that record your lessons and your rounds, so you can watch the
               ride again and keep it.
             </p>
 

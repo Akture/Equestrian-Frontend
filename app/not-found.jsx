@@ -12,11 +12,10 @@ export default function NotFound() {
             Nothing here
           </p>
           <h1 className="font-display text-[2.2rem] leading-tight text-ink dark:text-oat mb-4">
-            That page is not on this barn’s address
+            We could not find that page
           </h1>
           <p className="text-ink/60 dark:text-oat/55 leading-relaxed mb-9">
-            Barn pages live at equestrian.akture.video and the barn’s name. If you came from a link
-            someone sent you, check the address or return to the barn page.
+            If you followed a link from your barn, check the address, or head back to the start.
           </p>
           <Link
             href="/"

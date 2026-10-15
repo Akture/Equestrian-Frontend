@@ -28,8 +28,8 @@ export default function HowItWorksPage() {
               How it works
             </h1>
             <p className="mt-6 text-ink/65 dark:text-oat/60 leading-relaxed">
-              For riders and families: sign in, find the day and time you rode, and the footage is
-              yours. For barns: a call, a visit and a one-day install.
+              Riders and parents: sign in, pick the day and the time you rode, and the footage is
+              yours. Barns: a call, a visit and a one-day install.
             </p>
           </div>
         </Section>
@@ -127,7 +127,7 @@ export default function HowItWorksPage() {
               href="/barns#bring-akture"
               className="mt-12 btn-hermes inline-flex items-center gap-2 px-6 py-3 rounded-full font-label text-sm font-semibold shadow-hermes-md"
             >
-              Talk to us about your arena
+              Talk to us about your ring
               <i className="ph-bold ph-arrow-right text-sm" />
             </Link>
           </div>
@@ -139,7 +139,7 @@ export default function HowItWorksPage() {
               Ready to purchase footage?
             </h2>
             <p className="text-ink/65 dark:text-oat/55 mb-8 leading-relaxed">
-              Log in or create an account to browse the footage available at your barn.
+              Log in or create an account to see the footage from your barn’s ring.
             </p>
             <Link
               href="/access"
