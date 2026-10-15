@@ -42,8 +42,9 @@ export default function HeroCarousel() {
             src={media[slide.image]}
             alt=""
             className={`absolute inset-x-0 bottom-0 w-full object-cover ${
-              slide.imageTop ? 'top-28 h-[calc(100%-7rem)] object-top' : 'top-0 h-full object-center'
+              slide.imageTop ? 'top-28 h-[calc(100%-7rem)]' : 'top-0 h-full'
             }`}
+            style={{ objectPosition: slide.focus || 'center' }}
           />
           {slide.imageTop && (
             <div
