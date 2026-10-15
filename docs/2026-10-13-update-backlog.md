@@ -1,8 +1,21 @@
 # Update backlog — after the branch merge
 
-*Logged 2026-10-13 by Zane Cooke (via Claude Code). **Not started on purpose.** Nothing here
-gets built until Aryan has merged the three branches (Zane's `zane/one-page-per-barn`,
-Skyler's zoom fix, Aryan's `AK`) into one build. Then this list is worked in one batch.*
+*Logged 2026-10-13 by Zane Cooke (via Claude Code); updated 2026-10-15. Aryan merged `AK`
+into `main` on 2026-10-12 and hand-ported Zane's one-page-per-barn change. Skyler's zoom fix
+is still to come as his own PR. This list is worked in one batch on the `zane` branch, then
+goes to `main` as one PR once approved.*
+
+**Already done on `zane` (2026-10-15):**
+- [x] **One arena per barn.** Each barn in `lib/barns.js` has a single `arena`. At launch
+  Akture installs in one arena per location, so the barn page is that arena's purchase page.
+  A barn that adds a second install later gets a second entry.
+- [x] **Aubrey Meadows removed.** They said they're not interested, so the site shouldn't
+  suggest they're a client. Removed from the barn data, footage labels, seeded purchases,
+  every link (`/aubreymeadows` → `/demo`), the copy, the README and NOTES. The Demo Barn is
+  now the default barn and the worked example. Its footage hours moved into
+  `barn.availability`, so any barn can show them.
+- [x] Every bit of barn-code text that asked people to enter a code is gone; Aryan's merge
+  took care of that. The search in section A finds none of it.
 
 **Sources**
 - **A.** The infrastructure shift: no dedicated barn codes.
@@ -10,9 +23,9 @@ Skyler's zoom fix, Aryan's `AK`) into one build. Then this list is worked in one
 - **C.** Granola, "Akture Equestrian Web UI Review 10/13". Zane and Skyler clicked through the
   whole site at 100% Chrome zoom.
 
-**How to read the locations.** Files and quoted strings are taken from `origin/AK` at
-`4bbd1bf`, the most current branch. Line numbers will move after the merge, so search for
-the quoted text rather than going to a line.
+**How to read the locations.** Files and quoted strings are as of `zane` on 2026-10-15
+(`main` at `c12c490` plus the commit above). Search for the quoted text rather than going to
+a line number.
 
 **Status key:** `[ ]` to do · `[?]` needs a decision first (see **Open questions** at the end).
 
@@ -20,16 +33,14 @@ the quoted text rather than going to a line.
 
 ## A. Remove barn codes
 
-Accounts are no longer tied to a barn by a code. Aryan's `AK` already removed the code from
-the access flow, `NOTES.md` and the README. **If the merge takes AK's versions of these
-files, most of this section is already done.** If it takes `main` or Zane's version, every
-item below comes back. After merging, run this check; it should find nothing:
+Accounts are no longer tied to a barn by a code. The access flow, `NOTES.md` and the README
+are already clean on `main`. Run this check to confirm; it should find nothing:
 
 ```
 git grep -n -i -E 'barn code|AA1111|code once|enter the code|tied to (that|your|this) barn'
 ```
 
-Text that still needs changing **even on AK**:
+Text that still suggests a private, barn-only page:
 
 - [ ] **Homepage "For barns" hero card**, in `lib/copy.js`: *"Your clients get a page only
   they can reach."* Ana flagged this too (see B3).
@@ -46,11 +57,9 @@ Text that still needs changing **even on AK**:
   still holds.
 - [ ] **Profile**, in `components/ProfilePanel.jsx`: the row `Barn — tied to this account`.
   Remove it, or change it to "your barns".
-- [ ] **Header button on `main` and Zane's branch:** *"Enter barn code"*. It should read
-  "Purchase footage" or "Sign in". Check which one survives the merge.
-- [ ] **Support form option:** *"My barn code does not work"*. It's still on `main` and Zane's
-  branch; make sure the merge drops it.
-- [ ] **Not-found page:** *"...check the code on it."* Same as above.
+- [x] **Header button:** "Enter barn code" is gone; `main` has "Purchase footage".
+- [x] **Support form option** ("My barn code does not work") and **not-found page** ("check
+  the code on it"): both gone on `main`.
 - [?] **What replaces the code?** How does a rider reach their barn? Options: pick the barn
   after signing in, follow a barn link, or search. This decides the copy for several items
   above. → Open question 1.
@@ -104,17 +113,17 @@ The audience skews 55+, so size everything for legibility.
   might go to the FAQ; "For barns" should stay "Talk to us" (it already is).
   - **Flagged in the call as an open item to review together, not to decide now.** → Open
     question 3.
-  - Current destinations (AK):
+  - Current destinations (`zane`):
 
     | Card | Main button | Second button |
     |---|---|---|
-    | Riders | Purchase footage → `/aubreymeadows` | How it works → `/how-it-works` |
+    | Riders | Purchase footage → `/demo` (was `/aubreymeadows`) | How it works → `/how-it-works` |
     | Families | How it works → `/how-it-works` | What it costs → `/pricing` |
     | Trainers | See the player → `/demo/covered/watch/player-preview` | Barns → `/barns` |
     | Barns | Talk to us → `/barns#bring-akture` | What we install → `/how-it-works#what-we-install` |
 
-    The trainers button points to `/demo/covered/...`, an arena route that the one-page-per-barn
-    change redirects. Recheck it after the merge.
+    The trainers button points to `/demo/covered/watch/player-preview`. The watch route still
+    lives under the arena, so it works; only the bare `/demo/covered` redirects.
 
 ### C3. Pricing: a teaser until launch
 
@@ -168,8 +177,8 @@ These replace `barnFeatures` in `lib/copy.js`.
   - Public: the standard nav (Pricing, FAQ, Barns, …).
   - Logged in: **My Videos** and **Support** (Pricing might come back later as "Manage
     subscription").
-- [ ] **No separate arena pages** ("Covered Arena", "Outdoor Arena"). One purchase page per
-  barn. Zane's branch already does this; make sure it survives the merge.
+- [x] **No separate arena pages** ("Covered Arena", "Outdoor Arena"). One purchase page per
+  barn: done on `main` (arena routes redirect) and on `zane` (one arena per barn).
 - [ ] **Footer:** remove the Instagram and YouTube links until those accounts are live
   (`components/Footer.jsx`).
 
@@ -198,7 +207,7 @@ These replace `barnFeatures` in `lib/copy.js`.
 
 | Work | Owner |
 |---|---|
-| Merge all three branches into one build | **Aryan** |
+| Merge all three branches into one build | **Aryan**: AK merged 2026-10-12; Skyler's zoom fix still to come as his PR |
 | Purchase page revision, and folding the arena pages in | **Skyler** |
 | My Videos page | **Aryan** |
 | Copy pass | **Ana** |
