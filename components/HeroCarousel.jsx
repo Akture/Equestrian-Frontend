@@ -57,7 +57,7 @@ export default function HeroCarousel() {
           <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, rgba(8,17,13,0.80) 0%, rgba(8,17,13,0.25) 45%, rgba(8,17,13,0.10) 100%)' }} />
 
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full max-w-7xl mx-auto px-6 md:px-12 pt-16">
+            <div className="w-full max-w-7xl mx-auto px-6 md:px-12 pt-16 pb-28">
               <div className="max-w-xl">
                 <span className="inline-flex items-center gap-2 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-brass mb-6">
                   <span className="w-6 h-px bg-brass/70" aria-hidden="true" />
