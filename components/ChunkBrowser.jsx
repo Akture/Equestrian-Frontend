@@ -152,10 +152,10 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
         <section className="rounded-2xl border border-ink/15 bg-white/60 p-4 dark:border-oat/15 dark:bg-oat/[0.03] md:p-5">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="font-label text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/55 dark:text-oat/55">
+              <p className="font-label text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/65 dark:text-oat/55">
                 Choose a day
               </p>
-              <p className="mt-1 text-[0.8rem] text-ink/60 dark:text-oat/55">
+              <p className="mt-1 text-[0.8rem] text-ink/65 dark:text-oat/55">
                 Footage from the last {PURCHASE_WINDOW_HOURS} hours
               </p>
             </div>
@@ -174,7 +174,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
             >
               <span className="min-w-0">
                 <span className="block font-label text-[0.82rem] font-semibold">All available</span>
-                <span className="mt-0.5 block text-[0.72rem] text-ink/55 dark:text-oat/55">Last 48 hours</span>
+                <span className="mt-0.5 block text-[0.72rem] text-ink/65 dark:text-oat/55">Last 48 hours</span>
               </span>
               <span className="shrink-0 rounded-full bg-ink/5 px-2 py-1 font-label text-[0.65rem] tabular-nums dark:bg-oat/10">
                 {dayOptions.reduce((total, day) => total + (chunksByDay[day.key]?.length || 0), 0)}
@@ -197,7 +197,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
                 >
                   <span className="min-w-0">
                     <span className="block font-label text-[0.82rem] font-semibold">{day.short}</span>
-                    <span className="mt-0.5 block text-[0.72rem] text-ink/55 dark:text-oat/55">{day.label}</span>
+                    <span className="mt-0.5 block text-[0.72rem] text-ink/65 dark:text-oat/55">{day.label}</span>
                   </span>
                   <span className={`shrink-0 rounded-full px-2 py-1 font-label text-[0.65rem] tabular-nums ${active ? 'bg-hermes/20' : 'bg-ink/5 dark:bg-oat/10'}`}>
                     {count}
@@ -211,10 +211,10 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
         <section className="rounded-2xl border border-ink/15 bg-white/60 p-4 dark:border-oat/15 dark:bg-oat/[0.03] md:p-5 lg:min-w-[22rem]">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="font-label text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/55 dark:text-oat/55">
+              <p className="font-label text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/65 dark:text-oat/55">
                 Narrow by time
               </p>
-              <p className="mt-1 text-[0.8rem] text-ink/60 dark:text-oat/55">Select a start and end time</p>
+              <p className="mt-1 text-[0.8rem] text-ink/65 dark:text-oat/55">Select a start and end time</p>
             </div>
             <i className="ph ph-clock text-xl text-hermes-ink dark:text-hermes-light" aria-hidden="true" />
           </div>
@@ -228,7 +228,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
               }}
               options={timeOptions.slice(0, -1)}
             />
-            <span className="font-label text-[0.7rem] text-ink/50 dark:text-oat/50">to</span>
+            <span className="font-label text-[0.7rem] text-ink/65 dark:text-oat/55">to</span>
             <TimeSelect
               label="End time"
               value={toMin ?? bounds.end}
@@ -240,7 +240,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
             />
           </div>
           <div className="mt-3 flex min-h-6 items-center justify-between gap-3">
-            <p className="font-label text-[0.7rem] text-ink/60 dark:text-oat/55" aria-live="polite">
+            <p className="font-label text-[0.7rem] text-ink/65 dark:text-oat/55" aria-live="polite">
               {visible.length} of {all.length} segments
             </p>
             {customTimeRange && (
@@ -266,7 +266,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
           <details key={section.label} className="mb-4 rounded-2xl border border-ink/15 bg-white/40 dark:border-oat/15 dark:bg-oat/[0.02]">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-display text-xl marker:hidden">
               <span>{section.label}</span>
-              <span className="inline-flex items-center gap-3 font-label text-[0.72rem] text-ink/55 dark:text-oat/55">
+              <span className="inline-flex items-center gap-3 font-label text-[0.72rem] text-ink/65 dark:text-oat/55">
                 {sectionChunks.length} {sectionChunks.length === 1 ? 'segment' : 'segments'}
                 <i className="ph-bold ph-caret-down" aria-hidden="true" />
               </span>
@@ -315,7 +315,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
                 })}
               </ol>
             ) : (
-              <p className="border-t border-ink/10 px-5 py-4 text-[0.82rem] text-ink/55 dark:border-oat/10 dark:text-oat/55">
+              <p className="border-t border-ink/10 px-5 py-4 text-[0.82rem] text-ink/65 dark:border-oat/10 dark:text-oat/55">
                 No {section.label.toLowerCase()} footage is available for this selection.
               </p>
             )}
@@ -326,7 +326,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
       {visible.length === 0 && (
         <div className="mt-5 rounded-2xl border border-dashed border-ink/20 p-8 text-center dark:border-oat/20">
           <p className="font-display text-lg">No footage available for sale in this range</p>
-          <p className="mt-2 text-[0.86rem] text-ink/60 dark:text-oat/55">
+          <p className="mt-2 text-[0.86rem] text-ink/65 dark:text-oat/55">
             Footage is listed for up to 48 hours after recording. Try another day or show the full day.
           </p>
         </div>
@@ -414,7 +414,7 @@ function ChunkBody({ chunk, title }) {
       <p className="break-words font-display text-[1.02rem] leading-snug text-ink dark:text-oat" aria-label={title}>
         {chunk.label || 'Recorded footage'} · {chunk.arenaName}
       </p>
-      <p className="mt-2 text-[0.78rem] leading-snug text-ink/60 dark:text-oat/55">
+      <p className="mt-2 text-[0.78rem] leading-snug text-ink/65 dark:text-oat/55">
         {date} · {chunk.start}–{chunk.end}
       </p>
     </>
@@ -442,7 +442,7 @@ function TimeSelect({ label, value, onChange, options }) {
             <option key={minute} value={minute}>{minutesToClock(minute)}</option>
           ))}
         </select>
-        <i className="ph ph-caret-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink/50 dark:text-oat/50" aria-hidden="true" />
+        <i className="ph ph-caret-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink/65 dark:text-oat/55" aria-hidden="true" />
       </span>
     </label>
   );
