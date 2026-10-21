@@ -8,15 +8,14 @@ export default function NotFound() {
       <Header />
       <main className="min-h-screen flex items-center justify-center px-6 pt-32 pb-24 bg-oat dark:bg-ink">
         <div className="max-w-md text-center">
-          <p className="font-label text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-brass-ink dark:text-brass mb-5">
+          <p className="font-label text-[0.85rem] font-semibold uppercase tracking-[0.24em] text-brass-ink dark:text-brass mb-5">
             Nothing here
           </p>
           <h1 className="font-display text-[2.2rem] leading-tight text-ink dark:text-oat mb-4">
-            That page is not on this barn’s address
+            We could not find that page
           </h1>
           <p className="text-ink/60 dark:text-oat/55 leading-relaxed mb-9">
-            Barn pages live at equestrian.akture.video and the barn’s name. If you came from a link
-            someone sent you, check the address or return to the barn page.
+            If you followed a link from your barn, check the address, or head back to the start.
           </p>
           <Link
             href="/"

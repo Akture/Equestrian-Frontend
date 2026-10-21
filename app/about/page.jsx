@@ -17,7 +17,7 @@ export default function AboutPage() {
       <main className="pt-36">
         <section className="px-6 md:px-12 pb-20">
           <div className="max-w-3xl mx-auto">
-            <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-5">
+            <p className="flex items-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-5">
               <span className="w-6 h-px bg-hermes" aria-hidden="true" />
               About
             </p>
@@ -30,20 +30,20 @@ export default function AboutPage() {
 
             <div className="space-y-6 text-ink/65 dark:text-oat/60 leading-relaxed">
               <p>
-                Akture puts fixed cameras on courts and fields so the people who played can buy back
-                the footage. An arena works differently. One horse and rider go at a time, the part
-                worth watching is short, and what a trainer needs to see is the takeoff spot, which
-                depends entirely on where the camera is standing.
+                Akture started with fixed cameras on courts and fields, so the people who played
+                could watch the game again. A riding ring asks for something different. One horse
+                and rider go at a time, the part worth watching is short, and what a trainer needs
+                to see depends on where the camera is standing.
               </p>
               <p>
-                So the equestrian build puts several cameras in each arena and runs them on a
-                single timeline. Footage is sold by the window of time, because nobody knows in
-                advance exactly when a class will go in.
+                So we put three cameras in the ring, on the rail, at the in-gate and at the far
+                end, and run them on one shared clock. You buy the stretch of time you rode,
+                because nobody knows to the minute when a class will go in, and every angle comes
+                with it.
               </p>
               <p>
-                It lives at its own address — equestrian.akture.video — with a page for each barn.
-                Clients sign in or create an account to access the barn page. There is no public
-                feed and no search across barns.
+                Each barn has its own page. Riders, parents and trainers sign in to see their
+                barn’s footage, and nothing is public.
               </p>
             </div>
           </div>
@@ -58,7 +58,7 @@ export default function AboutPage() {
               <SectionHeading
                 eyebrow="Right now"
                 heading="Where we are"
-                sub="We are walking arenas now and spacing the first barns about a month apart, so the second install is better than the first. If your arena hosts lessons or shows, we would like to see it."
+                sub="We are installing at our first barns now and taking them one at a time, so each install is better than the last. If your ring hosts lessons or shows, we would like to see it."
                 align="left"
                 onDark
                 className="mb-8"
@@ -67,7 +67,7 @@ export default function AboutPage() {
                 href="/barns#bring-akture"
                 className="btn-hermes inline-flex items-center gap-2 px-6 py-3 rounded-full font-label text-sm font-semibold shadow-hermes-md"
               >
-                Talk to us about your arena
+                Talk to us about your ring
                 <i className="ph-bold ph-arrow-right text-sm" />
               </Link>
             </div>

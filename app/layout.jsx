@@ -26,7 +26,7 @@ const label = Outfit({
 export const metadata = {
   title: 'Akture Equestrian — every ride, from three angles',
   description:
-    'Arena cameras that record every lesson and every round at your barn. Buy back the window you rode in and watch it from all three angles.',
+    'Cameras in the ring at your barn record every lesson and every round. Pick the time you rode and watch it from every angle.',
   robots: { index: false, follow: false },
 };
 

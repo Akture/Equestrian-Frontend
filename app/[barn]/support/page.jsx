@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SupportForm from '@/components/SupportForm';
 import { barns, getBarn } from '@/lib/barns';
-import { faq, tickerLines } from '@/lib/copy';
+import { tickerLines } from '@/lib/copy';
 
 export function generateStaticParams() {
   return barns.map((b) => ({ barn: b.slug }));
@@ -22,8 +22,6 @@ export default async function SupportPage({ params }) {
   const barn = getBarn(slug);
   if (!barn) notFound();
 
-  const quick = faq.slice(0, 4);
-
   return (
     <>
       <Ticker lines={tickerLines} />
@@ -32,31 +30,24 @@ export default async function SupportPage({ params }) {
       <main className="pt-36 pb-24 bg-oat dark:bg-ink min-h-screen">
         <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-[1fr_22rem] gap-14">
           <div>
-            <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-4">
+            <p className="flex items-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-4">
               <span className="w-6 h-px bg-hermes" aria-hidden="true" />
               {barn.name}
             </p>
             <h1 className="font-display text-[2.2rem] md:text-[2.8rem] leading-tight">Contact support</h1>
             <p className="mt-4 mb-10 text-ink/65 dark:text-oat/60 leading-relaxed max-w-lg">
-              Tell us the arena, the day and the time and we can usually find it the same day.
+              Tell us the day and the time you rode, and we can usually sort it out the same day.
             </p>
             <SupportForm barn={{ slug: barn.slug, name: barn.name }} />
           </div>
 
           <aside className="lg:pt-24">
-            <p className="font-label text-[0.62rem] uppercase tracking-[0.2em] text-ink/65 dark:text-oat/55 mb-4">
-              Quick answers
+            <p className="font-display text-xl leading-snug">Have a quick question?</p>
+            <p className="text-ink/65 dark:text-oat/60 leading-relaxed mt-2">
+              Most answers about finding, buying and downloading footage are in the FAQ.
             </p>
-            <ul className="divide-y divide-ink/10 dark:divide-oat/10">
-              {quick.map((q) => (
-                <li key={q.q} className="py-4">
-                  <p className="font-display text-base leading-snug">{q.q}</p>
-                  <p className="text-ink/60 dark:text-oat/55 text-[0.82rem] leading-relaxed mt-1.5">{q.a}</p>
-                </li>
-              ))}
-            </ul>
-            <Link href="/faq" className="mt-4 inline-block font-label text-[0.82rem] font-semibold text-hermes-ink dark:text-hermes-light hover:underline underline-offset-4">
-              All questions →
+            <Link href="/faq" className="mt-4 inline-block font-label font-semibold text-hermes-ink dark:text-hermes-light hover:underline underline-offset-4">
+              Read the FAQ →
             </Link>
           </aside>
         </div>

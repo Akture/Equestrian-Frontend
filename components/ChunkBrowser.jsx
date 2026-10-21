@@ -112,7 +112,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
         ...chunk,
         arenaName: chunk.arenaName,
         minutes: CHUNK_MINUTES,
-        horse: chunk.label || 'Arena footage',
+        horse: chunk.label || 'Ring footage',
         expires: new Date(new Date(chunk.availableUntil).getTime()).toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
@@ -152,7 +152,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
         <section className="rounded-2xl border border-ink/15 bg-white/60 p-4 dark:border-oat/15 dark:bg-oat/[0.03] md:p-5">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="font-label text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/55 dark:text-oat/55">
+              <p className="font-label text-[0.85rem] font-semibold uppercase tracking-[0.16em] text-ink/55 dark:text-oat/55">
                 Choose a day
               </p>
               <p className="mt-1 text-[0.8rem] text-ink/60 dark:text-oat/55">
@@ -176,7 +176,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
                 <span className="block font-label text-[0.82rem] font-semibold">All available</span>
                 <span className="mt-0.5 block text-[0.72rem] text-ink/55 dark:text-oat/55">Last 48 hours</span>
               </span>
-              <span className="shrink-0 rounded-full bg-ink/5 px-2 py-1 font-label text-[0.65rem] tabular-nums dark:bg-oat/10">
+              <span className="shrink-0 rounded-full bg-ink/5 px-2 py-1 font-label text-[0.85rem] tabular-nums dark:bg-oat/10">
                 {dayOptions.reduce((total, day) => total + (chunksByDay[day.key]?.length || 0), 0)}
               </span>
             </button>
@@ -199,7 +199,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
                     <span className="block font-label text-[0.82rem] font-semibold">{day.short}</span>
                     <span className="mt-0.5 block text-[0.72rem] text-ink/55 dark:text-oat/55">{day.label}</span>
                   </span>
-                  <span className={`shrink-0 rounded-full px-2 py-1 font-label text-[0.65rem] tabular-nums ${active ? 'bg-hermes/20' : 'bg-ink/5 dark:bg-oat/10'}`}>
+                  <span className={`shrink-0 rounded-full px-2 py-1 font-label text-[0.85rem] tabular-nums ${active ? 'bg-hermes/20' : 'bg-ink/5 dark:bg-oat/10'}`}>
                     {count}
                   </span>
                 </button>
@@ -211,7 +211,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
         <section className="rounded-2xl border border-ink/15 bg-white/60 p-4 dark:border-oat/15 dark:bg-oat/[0.03] md:p-5 lg:min-w-[22rem]">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="font-label text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/55 dark:text-oat/55">
+              <p className="font-label text-[0.85rem] font-semibold uppercase tracking-[0.16em] text-ink/55 dark:text-oat/55">
                 Narrow by time
               </p>
               <p className="mt-1 text-[0.8rem] text-ink/60 dark:text-oat/55">Select a start and end time</p>
@@ -378,7 +378,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
 
         {note && (
           <p className="mt-3 font-label text-[0.78rem] text-hermes-light" role="status">
-            <i className="ph-fill ph-flask mr-1.5" />{note}
+            <i className="ph-fill ph-warning-circle mr-1.5" />{note}
           </p>
         )}
       </div>

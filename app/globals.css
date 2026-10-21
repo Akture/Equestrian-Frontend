@@ -71,6 +71,12 @@ body {
   min-height: 100%;
 }
 
+/* Sized up for legibility (10/13 review): much of the audience is 55+, so the
+   root is 18px and every rem-based size, button and gap scales with it. */
+html {
+  font-size: 112.5%;
+}
+
 body {
   background-color: rgb(var(--oat));
   color: rgb(var(--ink));
@@ -101,7 +107,7 @@ img {
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 12px;
 }
 
 ::-webkit-scrollbar-track {

@@ -7,12 +7,15 @@ import HeroCarousel from '@/components/HeroCarousel';
 import SectionHeading from '@/components/SectionHeading';
 import FeatureGrid from '@/components/FeatureGrid';
 import MultiCamShowcase from '@/components/MultiCamShowcase';
-import PricingTiers from '@/components/PricingTiers';
+import PricingTeaser from '@/components/PricingTeaser';
 import BarnCard from '@/components/BarnCard';
-import DemoRibbon from '@/components/DemoRibbon';
 import { barnFeatures, pricingCopy, riderFeatures, tickerLines } from '@/lib/copy';
 import { barns } from '@/lib/barns';
 import { media } from '@/lib/media';
+
+// The barn carousel waits until there are at least three real, signed barns
+// (10/13 review). Mock barns never show on the homepage.
+const liveBarns = barns.filter((barn) => barn.live);
 
 export default function HomePage() {
   return (
@@ -26,8 +29,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <SectionHeading
             eyebrow="For riders and families"
-            heading="Finding your ride takes a few seconds"
-            sub="You buy a stretch of time in one arena. Everything below is about getting you to the part you care about."
+            heading="Find your ride in seconds"
+            sub="Pick the day, pick the time you rode, and watch every angle. Nobody has to stand at the rail with a phone."
             className="mb-16"
           />
           <FeatureGrid items={riderFeatures} />
@@ -41,8 +44,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <SectionHeading
             eyebrow="For barns"
-            heading="Your arenas on a page only your clients can open"
-            sub="The cameras go in once. Nothing about the barn’s day changes."
+            heading="Video your clients want, with nothing for you to manage"
+            sub="The cameras go in once, and your riders take it from there."
             onDark
             className="mb-16"
           />
@@ -64,7 +67,7 @@ export default function HomePage() {
               href="/barns#bring-akture"
               className="btn-hermes inline-flex items-center gap-2 px-6 py-3 rounded-full font-label text-sm font-semibold shadow-hermes-md"
             >
-              Talk to us about your arena
+              Talk to us about your ring
               <i className="ph-bold ph-arrow-right text-sm" />
             </Link>
           </div>
@@ -80,33 +83,29 @@ export default function HomePage() {
             sub={pricingCopy.sub}
             className="mb-14"
           />
-          <PricingTiers compact />
+          <PricingTeaser />
 
           <p className="text-center mt-10">
             <Link
               href="/pricing"
               className="font-label text-sm font-semibold text-hermes-ink dark:text-hermes-light hover:underline underline-offset-4"
             >
-              What comes with every window →
+              See pricing →
             </Link>
           </p>
         </div>
       </Section>
 
-      {/* Barn pages */}
+      {/* Barn carousel, held until three real barns are live */}
+      {liveBarns.length >= 3 && (
       <Section tone="oatDim" className="py-24">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12">
-            <SectionHeading
-              eyebrow="Barn pages"
-              heading="Every barn has its own address"
-              align="left"
-            />
-            <DemoRibbon />
+            <SectionHeading eyebrow="Our barns" heading="Explore our barns" align="left" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {barns.slice(0, 3).map((barn) => (
+            {liveBarns.slice(0, 3).map((barn) => (
               <BarnCard key={barn.slug} barn={barn} />
             ))}
           </div>
@@ -116,11 +115,12 @@ export default function HomePage() {
               href="/barns"
               className="font-label text-sm font-semibold text-hermes-ink dark:text-hermes-light hover:underline underline-offset-4"
             >
-              See the barns we are in →
+              See all barns →
             </Link>
           </p>
         </div>
       </Section>
+      )}
 
       {/* Closing band */}
       <section className="relative py-28 overflow-hidden">
@@ -128,11 +128,11 @@ export default function HomePage() {
         <div className="absolute inset-0" style={{ background: 'rgba(8,17,13,0.88)' }} />
         <div className="relative max-w-3xl mx-auto px-6 text-center">
           <h2 className="font-display text-[1.9rem] md:text-[2.5rem] leading-tight text-oat mb-5">
-            Want the cameras in your arena?
+            Want the cameras in your ring?
           </h2>
           <p className="text-oat/70 leading-relaxed mb-9">
-            We are installing at our first barns now, and spacing them out so each one teaches us
-            something before the next. If your arena hosts lessons or shows, we would like to walk it.
+            We are installing at our first barns now. If your ring hosts lessons or shows, we would
+            like to come and see it.
           </p>
           <Link
             href="/barns#bring-akture"

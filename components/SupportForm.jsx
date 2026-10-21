@@ -8,10 +8,10 @@ import { useState } from 'react';
 const TO = 'contact@akture.video';
 
 const topics = [
-  'My ride is missing from the barn footage page',
+  'My ride is not listed',
   'A purchase did not arrive',
   'A video will not play or download',
-  'I cannot log in or access the barn',
+  'I cannot log in',
   'Something else',
 ];
 
@@ -30,7 +30,7 @@ export default function SupportForm({ barn }) {
 
   const field =
     'w-full rounded-form border border-ink/15 dark:border-oat/20 bg-white dark:bg-oat/[0.04] px-5 py-3.5 text-ink dark:text-oat focus:outline-none focus:border-hermes focus:ring-1 focus:ring-hermes/40 transition-colors';
-  const label = 'block font-label text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-ink/65 dark:text-oat/55 mb-2.5';
+  const label = 'block font-label text-[0.85rem] font-semibold uppercase tracking-[0.16em] text-ink/65 dark:text-oat/55 mb-2.5';
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -56,7 +56,7 @@ export default function SupportForm({ barn }) {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={6}
-          placeholder="The arena, the day and the time help us find it quickly."
+          placeholder="The day and the time you rode help us find it quickly."
           className={`${field} resize-y`}
         />
       </div>

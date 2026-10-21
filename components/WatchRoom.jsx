@@ -11,7 +11,7 @@ export default function WatchRoom({ folder, queue, recentlyPurchased = [], marke
   const [autoPlayNext, setAutoPlayNext] = useState(false);
 
   function demoAction(what) {
-    setNote(`${what} is not wired up in this mockup.`);
+    setNote(`${what} is coming soon.`);
     setTimeout(() => setNote(''), 3200);
   }
 
@@ -29,7 +29,7 @@ export default function WatchRoom({ folder, queue, recentlyPurchased = [], marke
       <section className="mt-8 rounded-2xl border border-ink/15 bg-white/50 p-6 dark:border-oat/15 dark:bg-oat/[0.03] md:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="font-label text-[0.62rem] uppercase tracking-[0.2em] text-hermes-ink dark:text-hermes-light">
+            <p className="font-label text-[0.85rem] uppercase tracking-[0.2em] text-hermes-ink dark:text-hermes-light">
               Your library
             </p>
             <h2 className="mt-1 font-display text-2xl">Recently Purchased Videos</h2>
@@ -70,7 +70,7 @@ export default function WatchRoom({ folder, queue, recentlyPurchased = [], marke
                     <span className="mt-1 block truncate text-[0.75rem] text-ink/60 dark:text-oat/55">
                       {video.dateLabel} · {video.start}–{video.end}
                     </span>
-                    <span className="mt-1 block font-label text-[0.62rem] uppercase tracking-[0.14em] text-hermes-ink dark:text-hermes-light">
+                    <span className="mt-1 block font-label text-[0.85rem] uppercase tracking-[0.14em] text-hermes-ink dark:text-hermes-light">
                       {video.horse}
                     </span>
                   </span>
@@ -88,7 +88,7 @@ export default function WatchRoom({ folder, queue, recentlyPurchased = [], marke
           role="status"
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 rounded-full bg-ink text-oat border border-brass/40 px-5 py-2.5 font-label text-[0.8rem] shadow-rail animate-rise"
         >
-          <i className="ph-fill ph-flask text-hermes mr-2" />
+          <i className="ph-fill ph-info text-hermes mr-2" />
           {note}
         </div>
       )}

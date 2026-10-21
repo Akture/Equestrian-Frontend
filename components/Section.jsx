@@ -21,7 +21,7 @@ export default function Section({ tone = 'oat', className = '', children, ...pro
 export function Eyebrow({ children, tone = 'light', className = '' }) {
   const colour = tone === 'dark' ? 'text-hermes-light' : 'text-hermes-ink';
   return (
-    <p className={`flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] ${colour} ${className}`}>
+    <p className={`flex items-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] ${colour} ${className}`}>
       <span className="w-6 h-px bg-hermes" aria-hidden="true" />
       {children}
     </p>
