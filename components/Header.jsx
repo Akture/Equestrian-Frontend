@@ -6,6 +6,7 @@ import GlassPanel from './GlassPanel';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
 import { DEFAULT_BARN_SLUG, MOCK_ACCOUNT_KEY } from '@/lib/access';
+import { getBarn } from '@/lib/barns';
 
 const baseLinks = [
   { label: 'How it works', href: '/how-it-works' },
@@ -24,7 +25,13 @@ export default function Header({ barn = null }) {
     try {
       const account = JSON.parse(localStorage.getItem(MOCK_ACCOUNT_KEY) || 'null');
       if (account && typeof account.email === 'string') {
-        setAccountBarn(account.barn || DEFAULT_BARN_SLUG);
+        // An account made before a barn was removed still points at it; fall
+        // back to the demo barn and repair the stored record.
+        const slug = getBarn(account.barn) ? account.barn : DEFAULT_BARN_SLUG;
+        if (slug !== account.barn) {
+          localStorage.setItem(MOCK_ACCOUNT_KEY, JSON.stringify({ ...account, barn: slug }));
+        }
+        setAccountBarn(slug);
       }
     } catch {
       /* private browsing — treat as signed out */
