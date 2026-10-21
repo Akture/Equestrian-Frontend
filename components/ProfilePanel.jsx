@@ -56,7 +56,7 @@ export default function ProfilePanel({ barn }) {
         <dl className="divide-y divide-ink/10 dark:divide-oat/10">
           {rows.map(([k, v]) => (
             <div key={k} className="py-4 grid grid-cols-[6rem_1fr] gap-4 items-baseline">
-              <dt className="font-label text-[0.85rem] uppercase tracking-[0.16em] text-ink/65 dark:text-oat/55">{k}</dt>
+              <dt className="font-label text-[0.62rem] uppercase tracking-[0.16em] text-ink/65 dark:text-oat/55">{k}</dt>
               <dd className="text-[0.94rem] text-ink dark:text-oat break-words">{v}</dd>
             </div>
           ))}

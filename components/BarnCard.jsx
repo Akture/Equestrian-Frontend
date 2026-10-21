@@ -26,7 +26,7 @@ export default function BarnCard({ barn }) {
           {barn.disciplines.map((d) => (
             <span
               key={d}
-              className="px-2.5 py-1 rounded-full border border-ink/15 dark:border-oat/15 font-label text-[0.85rem] uppercase tracking-[0.12em] text-ink/65 dark:text-oat/55"
+              className="px-2.5 py-1 rounded-full border border-ink/15 dark:border-oat/15 font-label text-[0.62rem] uppercase tracking-[0.12em] text-ink/65 dark:text-oat/55"
             >
               {d}
             </span>

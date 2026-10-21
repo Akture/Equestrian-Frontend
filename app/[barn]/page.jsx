@@ -51,7 +51,7 @@ export default async function BarnPage({ params }) {
 
         <div className="relative max-w-7xl mx-auto px-6 md:px-12">
           <div className="max-w-2xl">
-            <p className="flex items-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-hermes-light mb-5">
+            <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-light mb-5">
               <span className="w-6 h-px bg-hermes" aria-hidden="true" />
               equestrian.akture.video/{barn.slug}
             </p>
@@ -63,7 +63,7 @@ export default async function BarnPage({ params }) {
             <p className="mt-6 text-oat/70 leading-relaxed max-w-lg">{barn.blurb}</p>
             {barn.availability && (
               <div className="mt-6 max-w-lg rounded-xl border border-oat/20 bg-ink/30 p-4">
-                <p className="font-label text-[0.85rem] font-semibold uppercase tracking-[0.14em] text-hermes-light">
+                <p className="font-label text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-hermes-light">
                   Footage availability
                 </p>
                 <p className="mt-2 text-[0.88rem] leading-relaxed text-oat/80">
@@ -79,7 +79,7 @@ export default async function BarnPage({ params }) {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
             <div>
-              <p className="flex items-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-4">
+              <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-4">
                 <span className="w-6 h-px bg-hermes" aria-hidden="true" />
                 {arena.name} · {arena.dims} · {arena.surface}
               </p>
@@ -102,7 +102,7 @@ export default async function BarnPage({ params }) {
       {/* The three cameras, one line each. */}
       <Section tone="pine" className="py-20">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <p className="flex items-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-hermes-light mb-4">
+          <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-light mb-4">
             <span className="w-6 h-px bg-hermes" aria-hidden="true" />
             The cameras
           </p>

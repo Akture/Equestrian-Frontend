@@ -71,10 +71,12 @@ body {
   min-height: 100%;
 }
 
-/* Sized up for legibility (10/13 review): much of the audience is 55+, so the
-   root is 18px and every rem-based size, button and gap scales with it. */
+/* Root type scale. Everything on the site is rem, so this one value sets the
+   size of every heading, label, button and gap. 16px up to a 1280px-wide
+   viewport (phones and laptops unchanged), rising to 20px at 2560px for wide
+   monitors; the rem base keeps the user's own browser font preference in effect. */
 html {
-  font-size: 112.5%;
+  font-size: clamp(1rem, 0.75rem + 0.3125vw, 1.25rem);
 }
 
 body {

@@ -78,7 +78,7 @@ export default function AccessForm() {
   const field =
     'w-full rounded-form border border-ink/15 dark:border-oat/20 bg-white dark:bg-oat/[0.04] px-5 py-3.5 text-ink dark:text-oat placeholder:text-ink/60 dark:placeholder:text-oat/55 focus:outline-none focus:border-hermes focus:ring-1 focus:ring-hermes/40 transition-colors';
   const label =
-    'block font-label text-[0.85rem] font-semibold uppercase tracking-[0.16em] text-ink/65 dark:text-oat/55 mb-2.5';
+    'block font-label text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-ink/65 dark:text-oat/55 mb-2.5';
 
   return (
     <div className="mt-9">
@@ -152,7 +152,7 @@ export default function AccessForm() {
       </form>
 
       <div className="relative my-6 text-center">
-        <span className="relative z-10 bg-oat px-3 font-label text-[0.85rem] uppercase tracking-[0.14em] text-ink/50 dark:bg-ink dark:text-oat/50">
+        <span className="relative z-10 bg-oat px-3 font-label text-[0.68rem] uppercase tracking-[0.14em] text-ink/50 dark:bg-ink dark:text-oat/50">
           or
         </span>
         <span className="absolute inset-x-0 top-1/2 h-px bg-ink/10 dark:bg-oat/10" />

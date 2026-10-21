@@ -34,7 +34,7 @@ export default function StripeTestCheckout({ amount, onClose, onSuccess }) {
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="font-label text-[0.85rem] font-semibold uppercase tracking-[0.18em] text-hermes-ink dark:text-hermes-light">
+            <p className="font-label text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-hermes-ink dark:text-hermes-light">
               Stripe test mode
             </p>
             <h2 id="stripe-test-title" className="mt-2 font-display text-2xl text-ink dark:text-oat">
@@ -70,7 +70,7 @@ export default function StripeTestCheckout({ amount, onClose, onSuccess }) {
 
         <form onSubmit={submit} className="mt-5 space-y-4">
           <div>
-            <label htmlFor="stripe-test-card" className="mb-2 block font-label text-[0.85rem] font-semibold uppercase tracking-[0.14em] text-ink/65 dark:text-oat/60">
+            <label htmlFor="stripe-test-card" className="mb-2 block font-label text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-ink/65 dark:text-oat/60">
               Test card number
             </label>
             <input
@@ -86,7 +86,7 @@ export default function StripeTestCheckout({ amount, onClose, onSuccess }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="stripe-test-expiry" className="mb-2 block font-label text-[0.85rem] font-semibold uppercase tracking-[0.14em] text-ink/65 dark:text-oat/60">
+              <label htmlFor="stripe-test-expiry" className="mb-2 block font-label text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-ink/65 dark:text-oat/60">
                 Expiration
               </label>
               <input
@@ -100,7 +100,7 @@ export default function StripeTestCheckout({ amount, onClose, onSuccess }) {
               />
             </div>
             <div>
-              <label htmlFor="stripe-test-cvc" className="mb-2 block font-label text-[0.85rem] font-semibold uppercase tracking-[0.14em] text-ink/65 dark:text-oat/60">
+              <label htmlFor="stripe-test-cvc" className="mb-2 block font-label text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-ink/65 dark:text-oat/60">
                 Security code
               </label>
               <input

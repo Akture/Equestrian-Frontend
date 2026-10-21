@@ -32,7 +32,7 @@ export default async function MyVideosPage({ params }) {
       <main className="pt-36 pb-24 bg-oat dark:bg-ink min-h-screen">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="mb-10">
-            <p className="font-label text-[0.85rem] font-semibold uppercase tracking-[0.2em] text-hermes-ink dark:text-hermes-light mb-3">
+            <p className="font-label text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-hermes-ink dark:text-hermes-light mb-3">
               {barn.name}
             </p>
             <h1 className="font-display text-[2.2rem] md:text-[2.8rem] leading-tight">My Videos</h1>

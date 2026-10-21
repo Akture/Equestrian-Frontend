@@ -53,7 +53,7 @@ export default function Header({ barn = null }) {
             {barn && (
               <>
                 <span className="hidden sm:block w-px h-6 bg-pine/15 dark:bg-oat/15" aria-hidden="true" />
-                <span className="hidden sm:block font-label text-[0.8rem] uppercase tracking-[0.16em] text-pine dark:text-oat/70 truncate">
+                <span className="hidden sm:block font-label text-[0.7rem] uppercase tracking-[0.16em] text-pine dark:text-oat/70 truncate">
                   {barn.shortName}
                 </span>
               </>
@@ -77,7 +77,7 @@ export default function Header({ barn = null }) {
               <Link
                 key={link.href}
                 href={link.href}
-                className="font-label text-[0.95rem] font-medium text-ink/75 dark:text-oat/75 hover:text-hermes-ink dark:hover:text-hermes-ink dark:hover:text-hermes transition-colors"
+                className="font-label text-[0.82rem] font-medium text-ink/75 dark:text-oat/75 hover:text-hermes-ink dark:hover:text-hermes-ink dark:hover:text-hermes transition-colors"
               >
                 {link.label}
               </Link>
@@ -114,7 +114,7 @@ export default function Header({ barn = null }) {
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="font-label text-base font-medium text-ink/75 dark:text-oat/75 hover:text-hermes-ink dark:hover:text-hermes transition-colors"
+                className="font-label text-sm font-medium text-ink/75 dark:text-oat/75 hover:text-hermes-ink dark:hover:text-hermes transition-colors"
               >
                 {link.label}
               </Link>
@@ -124,7 +124,7 @@ export default function Header({ barn = null }) {
               <Link
                 href={signedInBarn ? `/${signedInBarn}/profile` : '/access'}
                 onClick={() => setOpen(false)}
-                className="font-label text-base font-medium text-ink/75 dark:text-oat/75"
+                className="font-label text-sm font-medium text-ink/75 dark:text-oat/75"
               >
                 {signedInBarn ? 'Profile' : 'Log in'}
               </Link>

@@ -18,11 +18,11 @@ export default function FolderCard({ folder, current = false, queueIds = [] }) {
           className="absolute inset-0"
           style={{ background: 'linear-gradient(0deg, rgba(8,17,13,0.85) 0%, rgba(8,17,13,0.15) 60%)' }}
         />
-        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-hermes font-label text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-ink">
+        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-hermes font-label text-[0.58rem] font-semibold uppercase tracking-[0.14em] text-ink">
           {current ? 'Playing' : 'Bought'}
         </span>
         <div className="absolute bottom-3 left-3 right-3">
-          <p className="font-label text-[0.85rem] uppercase tracking-[0.16em] text-hermes-light">
+          <p className="font-label text-[0.62rem] uppercase tracking-[0.16em] text-hermes-light">
             {folder.arenaName}
           </p>
           <p className="font-display text-lg text-oat leading-tight mt-0.5 tabular-nums">
@@ -41,7 +41,7 @@ export default function FolderCard({ folder, current = false, queueIds = [] }) {
           {folder.names.files.map((f) => (
             <li key={f.id} className="flex items-center justify-between gap-3 text-[0.78rem]">
               <span className="text-ink/75 dark:text-oat/70">{f.label}</span>
-              <span className="font-label text-[0.85rem] text-ink/65 dark:text-oat/55 truncate">{f.filename}</span>
+              <span className="font-label text-[0.66rem] text-ink/65 dark:text-oat/55 truncate">{f.filename}</span>
             </li>
           ))}
         </ul>

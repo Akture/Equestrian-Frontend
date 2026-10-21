@@ -30,7 +30,7 @@ export default async function SupportPage({ params }) {
       <main className="pt-36 pb-24 bg-oat dark:bg-ink min-h-screen">
         <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-[1fr_22rem] gap-14">
           <div>
-            <p className="flex items-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-4">
+            <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-4">
               <span className="w-6 h-px bg-hermes" aria-hidden="true" />
               {barn.name}
             </p>

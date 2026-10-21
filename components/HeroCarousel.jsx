@@ -59,7 +59,7 @@ export default function HeroCarousel() {
           <div className="absolute inset-0 flex items-center">
             <div className="w-full max-w-7xl mx-auto px-6 md:px-12 pt-16 pb-28">
               <div className="max-w-xl">
-                <span className="inline-flex items-center gap-2 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-brass mb-6">
+                <span className="inline-flex items-center gap-2 font-label text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-brass mb-6">
                   <span className="w-6 h-px bg-brass/70" aria-hidden="true" />
                   {slide.badge}
                 </span>

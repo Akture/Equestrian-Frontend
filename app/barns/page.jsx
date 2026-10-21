@@ -21,7 +21,7 @@ export default function BarnsPage() {
       <main className="pt-36">
         <section className="px-6 md:px-12 pb-14">
           <div className="max-w-3xl mx-auto text-center">
-            <p className="flex items-center justify-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-5">
+            <p className="flex items-center justify-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-5">
               <span className="w-6 h-px bg-hermes" aria-hidden="true" />
               Barns
             </p>

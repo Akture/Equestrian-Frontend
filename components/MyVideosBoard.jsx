@@ -296,7 +296,7 @@ export default function MyVideosBoard({ barnSlug, folders }) {
                         )}
                       </div>
                       <details className="mt-3 border-t border-ink/10 dark:border-oat/10 pt-3">
-                        <summary className="cursor-pointer font-label text-[0.85rem] text-ink/60 dark:text-oat/55">Folder files</summary>
+                        <summary className="cursor-pointer font-label text-[0.68rem] text-ink/60 dark:text-oat/55">Folder files</summary>
                         <ul className="mt-2 space-y-1.5">
                           {f.names.files.map((a) => {
                             const k = `${f.id}:${a.id}`;
@@ -311,19 +311,19 @@ export default function MyVideosBoard({ barnSlug, folders }) {
                                     className="flex min-w-0 flex-1 gap-2"
                                   >
                                     <input name="name" defaultValue={fileLabel(f, a)} autoFocus className="flex-1 min-w-0 rounded-md border border-hermes bg-white dark:bg-ink px-2 py-1 text-[0.8rem] focus:outline-none" />
-                                    <button type="submit" className="btn-hermes rounded-md px-2 font-label text-[0.85rem] font-semibold">Save</button>
+                                    <button type="submit" className="btn-hermes rounded-md px-2 font-label text-[0.66rem] font-semibold">Save</button>
                                   </form>
                                 ) : (
                                   <>
                                     <span className="text-ink/80 dark:text-oat/75 w-24 shrink-0">{fileLabel(f, a)}</span>
-                                    <span className="font-label text-[0.85rem] text-ink/65 dark:text-oat/55 truncate flex-1">{a.filename}</span>
+                                    <span className="font-label text-[0.66rem] text-ink/65 dark:text-oat/55 truncate flex-1">{a.filename}</span>
                                     <button
                                       type="button"
                                       onClick={() => setEditingFile(k)}
                                       aria-label={`Rename ${a.label}`}
                                       className="shrink-0 text-ink/65 dark:text-oat/55 hover:text-hermes-ink dark:hover:text-hermes-light"
                                     >
-                                      <i className="ph-bold ph-pencil-simple text-[0.85rem]" />
+                                      <i className="ph-bold ph-pencil-simple text-[0.66rem]" />
                                     </button>
                                   </>
                                 )}
@@ -379,7 +379,7 @@ function FolderThumbnail({ selected, onSelect }) {
         >
           <img src={feed.poster} alt="" className="h-full w-full object-cover" />
           <span className="absolute inset-0 bg-ink/25" />
-          <span className="absolute bottom-1 left-1.5 font-label text-[0.72rem] uppercase tracking-[0.1em] text-white">
+          <span className="absolute bottom-1 left-1.5 font-label text-[0.52rem] uppercase tracking-[0.1em] text-white">
             {feed.label}
           </span>
         </div>

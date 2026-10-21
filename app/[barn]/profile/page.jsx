@@ -30,7 +30,7 @@ export default async function ProfilePage({ params }) {
         <div className="max-w-5xl mx-auto px-6 md:px-12">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 mb-10">
             <div>
-              <p className="flex items-center gap-3 font-label text-[0.85rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-4">
+              <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-4">
                 <span className="w-6 h-px bg-hermes" aria-hidden="true" />
                 {barn.name}
               </p>
