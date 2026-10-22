@@ -4,14 +4,14 @@ import { useRef, useState } from 'react';
 import { CHUNK_MINUTES, MAX_CHUNKS_PER_PURCHASE, minutesToClock } from '@/lib/rides';
 
 const MAX_MINUTES = MAX_CHUNKS_PER_PURCHASE * CHUNK_MINUTES;
-const GLOW = '0 0 2px rgb(var(--hermes)), 0 0 12px rgb(var(--hermes) / 0.7)';
+const GLOW = '0 0 2px rgb(var(--gold)), 0 0 12px rgb(var(--gold) / 0.7)';
 
 // One day of an arena as a line, with a start bracket and an end bracket.
 //   · both brackets move on the 15-minute grid
 //   · the brackets stop 15 minutes apart and never cross
 //   · past 60 minutes apart, the bracket being dragged brings the other along
 //   · a press on the open line picks up the nearer bracket
-export default function TimeRangeSlider({ bounds, slots, value, onChange }) {
+export default function TimeRangeSlider({ bounds, value, onChange }) {
   const trackRef = useRef(null);
   const [dragging, setDragging] = useState(null);
   const span = bounds.end - bounds.start;
@@ -101,24 +101,12 @@ export default function TimeRangeSlider({ bounds, slots, value, onChange }) {
         aria-label="Time range"
       >
         {/* the day as a line */}
-        <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 overflow-hidden rounded-full">
-          {slots.map((slot) => (
-            <span
-              key={slot.startMin}
-              data-slot={slot.startMin}
-              data-state={slot.owned ? 'owned' : slot.available ? 'open' : 'none'}
-              className={`absolute top-0 h-full ${
-                slot.owned ? 'bg-pine-lit dark:bg-pine-soft' : slot.available ? 'bg-pine-deep dark:bg-pine-lit' : 'bg-pine-deep/25 dark:bg-pine-lit/25'
-              }`}
-              style={{ left: `${pct(slot.startMin)}%`, width: `${(CHUNK_MINUTES / span) * 100}%` }}
-            />
-          ))}
-        </div>
+        <div data-line className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-pine-deep dark:bg-pine-lit" />
 
         {/* the selected window */}
         <div
           data-selection
-          className="pointer-events-none absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-hermes"
+          className="pointer-events-none absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-gold"
           style={{
             left: `${pct(value.start)}%`,
             width: `${pct(value.end) - pct(value.start)}%`,
@@ -168,12 +156,6 @@ export default function TimeRangeSlider({ bounds, slots, value, onChange }) {
           </span>
         ))}
       </div>
-
-      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 font-label text-[0.66rem] text-ink/65 dark:text-oat/55">
-        <Key swatch="bg-pine-deep dark:bg-pine-lit" label="Footage for sale" />
-        <Key swatch="bg-pine-lit dark:bg-pine-soft" label="Already in My Videos" />
-        <Key swatch="bg-pine-deep/25 dark:bg-pine-lit/25" label="Nothing recorded yet" />
-      </div>
     </div>
   );
 }
@@ -187,15 +169,6 @@ function capture(event) {
   } catch (e) {
     /* untracked pointer */
   }
-}
-
-function Key({ swatch, label }) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className={`inline-block h-1 w-4 rounded-full ${swatch}`} />
-      {label}
-    </span>
-  );
 }
 
 function hourLabel(minute) {

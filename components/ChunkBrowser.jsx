@@ -44,15 +44,6 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
 
   // Every 15-minute slot of the day, so the track can show what is for sale,
   // what is already bought, and what has not been recorded yet.
-  const slots = useMemo(() => {
-    const out = [];
-    for (let m = bounds.start; m < bounds.end; m += CHUNK_MINUTES) {
-      const chunk = byStart.get(m);
-      out.push({ startMin: m, available: Boolean(chunk), owned: Boolean(chunk && owned.has(chunk.id)) });
-    }
-    return out;
-  }, [bounds.start, bounds.end, byStart, owned]);
-
   // Where the brackets land when a day opens: the first lesson on the schedule,
   // else the first footage for sale; half an hour when the next slot is there too.
   const defaultWindow = useMemo(() => {
@@ -184,7 +175,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
           <i className="ph ph-clock text-xl text-hermes-ink dark:text-hermes-light" aria-hidden="true" />
         </div>
 
-        <TimeRangeSlider bounds={bounds} slots={slots} value={value} onChange={setWindow} />
+        <TimeRangeSlider bounds={bounds} value={value} onChange={setWindow} />
       </section>
 
       <div
