@@ -35,7 +35,7 @@ export default function SectionHeading({
         {heading}
       </h2>
 
-      {sub && <p className={`mt-4 leading-relaxed ${subColour}`}>{sub}</p>}
+      {sub && <p className={`mt-4 text-lg leading-relaxed ${subColour}`}>{sub}</p>}
     </div>
   );
 }

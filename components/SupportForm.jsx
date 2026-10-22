@@ -8,10 +8,10 @@ import { useState } from 'react';
 const TO = 'contact@akture.video';
 
 const topics = [
-  'My ride is missing from the barn footage page',
+  'My ride is not listed',
   'A purchase did not arrive',
   'A video will not play or download',
-  'I cannot log in or access the barn',
+  'I cannot log in',
   'Something else',
 ];
 
@@ -56,7 +56,7 @@ export default function SupportForm({ barn }) {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={6}
-          placeholder="The arena, the day and the time help us find it quickly."
+          placeholder="The day and the time you rode help us find it quickly."
           className={`${field} resize-y`}
         />
       </div>

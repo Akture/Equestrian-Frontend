@@ -71,6 +71,14 @@ body {
   min-height: 100%;
 }
 
+/* Root type scale. Everything on the site is rem, so this one value sets the
+   size of every heading, label, button and gap. 18px on phones and laptops,
+   rising from a 1280px-wide viewport to 22px at 2560px for wide monitors; the
+   rem base keeps the user's own browser font preference in effect. */
+html {
+  font-size: clamp(1.125rem, 0.875rem + 0.3125vw, 1.375rem);
+}
+
 body {
   background-color: rgb(var(--oat));
   color: rgb(var(--ink));
@@ -101,7 +109,7 @@ img {
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 12px;
 }
 
 ::-webkit-scrollbar-track {

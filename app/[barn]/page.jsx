@@ -3,7 +3,6 @@ import Ticker from '@/components/Ticker';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Section from '@/components/Section';
-import DemoRibbon from '@/components/DemoRibbon';
 import ChunkBrowser from '@/components/ChunkBrowser';
 import { barns, cameraRig, getBarn } from '@/lib/barns';
 import { tickerLines } from '@/lib/copy';
@@ -24,14 +23,13 @@ export default async function BarnPage({ params }) {
   const barn = getBarn(slug);
   if (!barn) notFound();
 
+  const { arena } = barn;
   const dayOptions = getRecentDays();
   const chunksByDay = Object.fromEntries(
     dayOptions.map((day) => [
       day.key,
-      barn.arenas.flatMap((arena) =>
-        availableChunksForDay(slug, arena.slug, day.key, new Date(), dayOptions)
-          .map((chunk) => ({ ...chunk, arenaName: arena.name }))
-      ),
+      availableChunksForDay(slug, arena.slug, day.key, new Date(), dayOptions)
+        .map((chunk) => ({ ...chunk, arenaName: arena.name })),
     ])
   );
   const ownedIds = purchasesForBarn(slug).map((purchase) => purchase.id);
@@ -63,15 +61,13 @@ export default async function BarnPage({ params }) {
             </h1>
             <p className="mt-3 text-oat/60 text-[0.94rem]">{barn.city}</p>
             <p className="mt-6 text-oat/70 leading-relaxed max-w-lg">{barn.blurb}</p>
-            {barn.slug === 'aubreymeadows' && (
+            {barn.availability && (
               <div className="mt-6 max-w-lg rounded-xl border border-oat/20 bg-ink/30 p-4">
                 <p className="font-label text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-hermes-light">
                   Footage availability
                 </p>
                 <p className="mt-2 text-[0.88rem] leading-relaxed text-oat/80">
-                  Monday to Friday: 8am to 5pm · Saturday &amp; Sunday: 9am to 12pm.
-                  Any changes to footage availability will be reflected here. Footage is
-                  available for sale for up to 48 hours after recording.
+                  {barn.availability}
                 </p>
               </div>
             )}
@@ -79,19 +75,18 @@ export default async function BarnPage({ params }) {
         </div>
       </section>
 
-      <Section tone="oat" className="py-20">
+      <Section tone="oatPine" className="py-20">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
             <div>
               <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-ink dark:text-hermes-light mb-4">
                 <span className="w-6 h-px bg-hermes" aria-hidden="true" />
-                Available footage
+                {arena.name} · {arena.dims} · {arena.surface}
               </p>
               <h2 className="font-display text-[1.85rem] md:text-[2.3rem] leading-tight">
                 Find and purchase your ride
               </h2>
             </div>
-            <DemoRibbon />
           </div>
 
           <ChunkBrowser
@@ -104,15 +99,15 @@ export default async function BarnPage({ params }) {
         </div>
       </Section>
 
-      {/* What sits in each arena, in one line per camera. */}
-      <Section tone="pine" className="py-20">
+      {/* The three cameras, one line each. */}
+      <Section tone="pineInk" className="py-20">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <p className="flex items-center gap-3 font-label text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-hermes-light mb-4">
             <span className="w-6 h-px bg-hermes" aria-hidden="true" />
             The cameras
           </p>
           <h2 className="font-display text-[1.85rem] md:text-[2.3rem] leading-tight text-oat max-w-xl">
-            The same cameras in every arena here
+            The cameras in this ring
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">

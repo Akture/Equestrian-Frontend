@@ -11,7 +11,7 @@ export default function WatchRoom({ folder, queue, recentlyPurchased = [], marke
   const [autoPlayNext, setAutoPlayNext] = useState(false);
 
   function demoAction(what) {
-    setNote(`${what} is not wired up in this mockup.`);
+    setNote(`${what} is coming soon.`);
     setTimeout(() => setNote(''), 3200);
   }
 
@@ -88,7 +88,7 @@ export default function WatchRoom({ folder, queue, recentlyPurchased = [], marke
           role="status"
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 rounded-full bg-ink text-oat border border-brass/40 px-5 py-2.5 font-label text-[0.8rem] shadow-rail animate-rise"
         >
-          <i className="ph-fill ph-flask text-hermes mr-2" />
+          <i className="ph-fill ph-info text-hermes mr-2" />
           {note}
         </div>
       )}

@@ -41,14 +41,23 @@ export default function HeroCarousel() {
           <img
             src={media[slide.image]}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover object-center"
+            className={`absolute inset-x-0 bottom-0 w-full object-cover ${
+              slide.imageTop ? 'top-28 h-[calc(100%-7rem)]' : 'top-0 h-full'
+            }`}
+            style={{ objectPosition: slide.focus || 'center' }}
           />
+          {slide.imageTop && (
+            <div
+              className="absolute inset-x-0 top-28 h-24"
+              style={{ background: 'linear-gradient(180deg, rgba(8,17,13,1) 0%, rgba(8,17,13,0) 100%)' }}
+            />
+          )}
           {/* Pine scrim rather than black — the ground colour carries through. */}
           <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(8,17,13,0.96) 0%, rgba(8,17,13,0.90) 34%, rgba(8,17,13,0.62) 64%, rgba(8,17,13,0.18) 100%)' }} />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, rgba(8,17,13,0.80) 0%, rgba(8,17,13,0.25) 45%, rgba(8,17,13,0.10) 100%)' }} />
 
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full max-w-7xl mx-auto px-6 md:px-12 pt-16">
+            <div className="w-full max-w-7xl mx-auto px-6 md:px-12 pt-16 pb-28">
               <div className="max-w-xl">
                 <span className="inline-flex items-center gap-2 font-label text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-brass mb-6">
                   <span className="w-6 h-px bg-brass/70" aria-hidden="true" />
@@ -87,33 +96,33 @@ export default function HeroCarousel() {
         </div>
       ))}
 
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2.5 z-20">
-        {heroSlides.map((s, idx) => (
-          <button
-            key={s.badge}
-            onClick={() => go(idx)}
-            aria-label={`Show slide ${idx + 1}: ${s.badge}`}
-            className="h-[3px] rounded-full transition-all"
-            style={{
-              width: idx === i ? '2.75rem' : '1.5rem',
-              backgroundColor: idx === i ? 'rgba(198,166,111,1)' : 'rgba(246,242,234,0.28)',
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="absolute bottom-8 right-6 md:right-12 flex gap-2 z-20">
+      {/* Arrows sit either side of the position markers. */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 z-20">
         <button
           onClick={() => go(i - 1)}
           aria-label="Previous slide"
-          className="w-10 h-10 rounded-full border border-oat/20 text-oat/80 hover:text-brass hover:border-brass/60 flex items-center justify-center transition-colors"
+          className="w-11 h-11 rounded-full border border-oat/25 text-oat/80 hover:text-brass hover:border-brass/60 flex items-center justify-center transition-colors"
         >
           <i className="ph-bold ph-caret-left" />
         </button>
+        <div className="flex gap-2.5">
+          {heroSlides.map((s, idx) => (
+            <button
+              key={s.badge}
+              onClick={() => go(idx)}
+              aria-label={`Show slide ${idx + 1}: ${s.badge}`}
+              className="h-[4px] rounded-full transition-all"
+              style={{
+                width: idx === i ? '2.75rem' : '1.5rem',
+                backgroundColor: idx === i ? 'rgba(198,166,111,1)' : 'rgba(246,242,234,0.28)',
+              }}
+            />
+          ))}
+        </div>
         <button
           onClick={() => go(i + 1)}
           aria-label="Next slide"
-          className="w-10 h-10 rounded-full border border-oat/20 text-oat/80 hover:text-brass hover:border-brass/60 flex items-center justify-center transition-colors"
+          className="w-11 h-11 rounded-full border border-oat/25 text-oat/80 hover:text-brass hover:border-brass/60 flex items-center justify-center transition-colors"
         >
           <i className="ph-bold ph-caret-right" />
         </button>

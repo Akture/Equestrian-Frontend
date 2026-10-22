@@ -7,8 +7,7 @@
 //   2. Components import only *.module.css — never a plain .css file.
 //   3. No colour literal in tailwind.config.js: tokens live in globals.css.
 //   4. No opacity modifier off Tailwind's scale in a class string. Tailwind
-//      drops those silently, which is how every photo scrim on this site once
-//      went missing at the same time.
+//      drops those silently, so the class generates nothing.
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';

@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 import Section from '@/components/Section';
 import SectionHeading from '@/components/SectionHeading';
 import MultiCamShowcase from '@/components/MultiCamShowcase';
-import { howItWorks, theRig, tickerLines } from '@/lib/copy';
+import { barnSteps, howItWorks, theRig, tickerLines } from '@/lib/copy';
 import { cameraRig } from '@/lib/barns';
 import { media } from '@/lib/media';
 
@@ -25,17 +25,19 @@ export default function HowItWorksPage() {
               How it works
             </p>
             <h1 className="font-display text-[2.4rem] md:text-[3.2rem] leading-[1.08]">
-              From sign-in to your footage
+              How it works
             </h1>
             <p className="mt-6 text-ink/65 dark:text-oat/60 leading-relaxed">
-              Sign in or create an account, then find the day and time you rode in on your barn’s footage page.
+              Riders and parents: sign in, pick the day and the time you rode, and the footage is
+              yours. Barns: a call, a visit and a one-day install.
             </p>
           </div>
         </Section>
 
-        {/* The four steps, on the green ground */}
+        {/* The four rider steps, on the green ground */}
         <Section tone="pine" className="py-20">
           <div className="max-w-7xl mx-auto px-6 md:px-12">
+            <SectionHeading eyebrow="For riders and families" heading="From sign-in to your footage" align="left" onDark className="mb-14" />
             <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-12">
               {howItWorks.map((step) => (
                 <li key={step.step}>
@@ -91,8 +93,43 @@ export default function HowItWorksPage() {
                     </div>
                   ))}
                 </div>
+
+                <Link
+                  href="/demo/covered/watch/player-preview"
+                  className="mt-10 inline-flex items-center gap-2 font-label text-sm font-semibold text-hermes-ink dark:text-hermes-light hover:underline underline-offset-4"
+                >
+                  Try the player with sample footage →
+                </Link>
               </div>
             </div>
+          </div>
+        </Section>
+
+        {/* The barn flow. This page covers barns as well as riders. */}
+        <Section tone="pine" className="py-20">
+          <div className="max-w-7xl mx-auto px-6 md:px-12">
+            <SectionHeading eyebrow="For barns" heading="How to get started" align="left" onDark className="mb-14" />
+            <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-12">
+              {barnSteps.map((step, idx) => (
+                <li key={step.title}>
+                  <div className="flex items-center gap-3 mb-5">
+                    <span className="font-display text-3xl text-hermes-light leading-none">
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
+                    <span className="flex-1 h-px bg-hermes/50" aria-hidden="true" />
+                  </div>
+                  <h3 className="font-display text-xl text-oat mb-2.5">{step.title}</h3>
+                  <p className="text-oat/65 leading-relaxed">{step.desc}</p>
+                </li>
+              ))}
+            </ol>
+            <Link
+              href="/barns#bring-akture"
+              className="mt-12 btn-hermes inline-flex items-center gap-2 px-6 py-3 rounded-full font-label text-sm font-semibold shadow-hermes-md"
+            >
+              Talk to us about your ring
+              <i className="ph-bold ph-arrow-right text-sm" />
+            </Link>
           </div>
         </Section>
 
@@ -102,7 +139,7 @@ export default function HowItWorksPage() {
               Ready to purchase footage?
             </h2>
             <p className="text-ink/65 dark:text-oat/55 mb-8 leading-relaxed">
-              Log in or create an account to browse the footage available at Aubrey Meadows.
+              Log in or create an account to see the footage from your barn’s ring.
             </p>
             <Link
               href="/access"

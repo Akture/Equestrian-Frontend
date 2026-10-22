@@ -46,7 +46,7 @@ export default function ProfilePanel({ barn }) {
 
   const rows = [
     ['Email', acct.email],
-    ['Barn', `${barn.name} — tied to this account`],
+    ['Barn', barn.name],
     ['Page', `equestrian.akture.video/${barn.slug}`],
   ];
 

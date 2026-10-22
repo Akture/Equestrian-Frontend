@@ -3,7 +3,6 @@ import Ticker from '@/components/Ticker';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProfilePanel from '@/components/ProfilePanel';
-import DemoRibbon from '@/components/DemoRibbon';
 import { barns, getBarn } from '@/lib/barns';
 import { tickerLines } from '@/lib/copy';
 
@@ -37,7 +36,6 @@ export default async function ProfilePage({ params }) {
               </p>
               <h1 className="font-display text-[2.2rem] md:text-[2.8rem] leading-tight">Profile</h1>
             </div>
-            <DemoRibbon />
           </div>
 
           <ProfilePanel barn={{ slug: barn.slug, name: barn.name }} />

@@ -4,7 +4,9 @@
 const tones = {
   oat: 'bg-oat dark:bg-ink text-ink dark:text-oat',
   oatDim: 'bg-oat-dim dark:bg-ink-soft text-ink dark:text-oat',
+  oatPine: 'bg-oat dark:bg-pine-deep text-ink dark:text-oat',
   pine: 'bg-pine-deep text-oat',
+  pineInk: 'bg-pine-deep dark:bg-ink text-oat',
   pineMid: 'bg-pine text-oat',
   ink: 'bg-ink text-oat',
 };

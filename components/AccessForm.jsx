@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DemoRibbon from './DemoRibbon';
 import { DEFAULT_BARN_SLUG, MOCK_ACCOUNT_KEY } from '@/lib/access';
 
 // Mock accounts live in this browser until the production auth provider is connected.
@@ -169,7 +168,6 @@ export default function AccessForm() {
       </button>
 
       <div className="mt-8 rounded-xl border border-ink/15 dark:border-oat/15 p-5">
-        <DemoRibbon className="mb-3" />
         <p className="text-ink/65 dark:text-oat/55 text-[0.82rem] leading-relaxed">
           Email accounts and Google sign-in are mocked in this preview and stored in this browser.
           No authentication data is sent to a server.

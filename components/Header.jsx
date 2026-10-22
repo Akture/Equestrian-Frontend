@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import GlassPanel from './GlassPanel';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
+import { DEFAULT_BARN_SLUG, MOCK_ACCOUNT_KEY } from '@/lib/access';
+import { getBarn } from '@/lib/barns';
 
 const baseLinks = [
   { label: 'How it works', href: '/how-it-works' },
@@ -15,12 +17,32 @@ const baseLinks = [
 
 export default function Header({ barn = null }) {
   const [open, setOpen] = useState(false);
+  const [accountBarn, setAccountBarn] = useState(null);
 
-  // On a barn page, keep navigation focused on the barn account tools.
-  const links = barn
+  // The nav follows sign-in, not the page: the same header on every page,
+  // with the account tools once someone is signed in.
+  useEffect(() => {
+    try {
+      const account = JSON.parse(localStorage.getItem(MOCK_ACCOUNT_KEY) || 'null');
+      if (account && typeof account.email === 'string') {
+        // A stored account can point at a barn that no longer exists; fall back
+        // to the demo barn and repair the stored record.
+        const slug = getBarn(account.barn) ? account.barn : DEFAULT_BARN_SLUG;
+        if (slug !== account.barn) {
+          localStorage.setItem(MOCK_ACCOUNT_KEY, JSON.stringify({ ...account, barn: slug }));
+        }
+        setAccountBarn(slug);
+      }
+    } catch {
+      /* private browsing — treat as signed out */
+    }
+  }, []);
+
+  const signedInBarn = accountBarn || barn?.slug || null;
+  const links = signedInBarn
     ? [
-        { label: 'My Videos', href: `/${barn.slug}/my-videos` },
-        { label: 'Support', href: `/${barn.slug}/support` },
+        { label: 'My Videos', href: `/${signedInBarn}/my-videos` },
+        { label: 'Support', href: `/${signedInBarn}/support` },
       ]
     : baseLinks;
 
@@ -73,15 +95,15 @@ export default function Header({ barn = null }) {
             <ThemeToggle className="hidden sm:flex" />
 
             <Link
-              href={barn ? `/${barn.slug}/profile` : '/access'}
+              href={signedInBarn ? `/${signedInBarn}/profile` : '/access'}
               className="hidden lg:block font-label text-[0.82rem] font-medium text-ink/75 dark:text-oat/75 hover:text-hermes-ink dark:hover:text-hermes transition-colors"
             >
-              {barn ? 'Profile' : 'Log in'}
+              {signedInBarn ? 'Profile' : 'Log in'}
             </Link>
 
             <Link
-              href={barn ? `/${barn.slug}` : '/aubreymeadows'}
-              className="btn-hermes px-5 py-2.5 rounded-full font-label text-[0.82rem] font-semibold whitespace-nowrap shadow-hermes-sm"
+              href={signedInBarn ? `/${signedInBarn}` : '/access'}
+              className="btn-hermes px-5 py-2.5 rounded-full font-label text-[0.95rem] font-semibold whitespace-nowrap shadow-hermes-sm"
             >
               Purchase footage
             </Link>
@@ -107,17 +129,17 @@ export default function Header({ barn = null }) {
 
             <div className="flex items-center justify-between pt-1">
               <Link
-                href={barn ? `/${barn.slug}/profile` : '/access'}
+                href={signedInBarn ? `/${signedInBarn}/profile` : '/access'}
                 onClick={() => setOpen(false)}
                 className="font-label text-sm font-medium text-ink/75 dark:text-oat/75"
               >
-                {barn ? 'Profile' : 'Log in'}
+                {signedInBarn ? 'Profile' : 'Log in'}
               </Link>
               <ThemeToggle />
             </div>
 
             <Link
-              href={barn ? `/${barn.slug}` : '/aubreymeadows'}
+              href={signedInBarn ? `/${signedInBarn}` : '/access'}
               onClick={() => setOpen(false)}
               className="btn-hermes px-5 py-3 rounded-full font-label text-sm font-semibold text-center"
             >
