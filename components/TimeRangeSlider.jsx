@@ -149,7 +149,7 @@ export default function TimeRangeSlider({ bounds, value, onChange }) {
         {hours.map((m) => (
           <span
             key={m}
-            className="absolute -translate-x-1/2 font-label text-[0.62rem] tabular-nums text-ink/65 dark:text-oat/55"
+            className="absolute -translate-x-1/2 whitespace-nowrap font-label text-[0.62rem] tabular-nums text-ink/65 dark:text-oat/55"
             style={{ left: `${pct(m)}%` }}
           >
             {hourLabel(m)}

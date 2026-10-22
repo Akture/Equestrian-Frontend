@@ -120,7 +120,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
   return (
     <div>
       <div className="mb-8 grid gap-4 lg:grid-cols-[1fr_auto]">
-        <section className="rounded-2xl border border-ink/15 bg-white/60 p-4 dark:border-oat/15 dark:bg-oat/[0.03] md:p-5">
+        <section className="rounded-2xl border border-ink/15 bg-white/60 p-4 dark:border-oat/15 dark:bg-ink md:p-5">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <p className="font-label text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/65 dark:text-oat/55">
@@ -130,7 +130,6 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
                 Footage from the last {PURCHASE_WINDOW_HOURS} hours
               </p>
             </div>
-            <i className="ph ph-calendar-blank text-xl text-hermes-ink dark:text-hermes-light" aria-hidden="true" />
           </div>
           <div className="grid grid-cols-3 gap-2">
             {dayOptions.map((day) => {
@@ -144,15 +143,15 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
                   aria-pressed={active}
                   className={`flex min-h-14 items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-colors ${
                     active
-                      ? 'border-hermes bg-hermes/15 text-hermes-ink dark:text-hermes-light'
-                      : 'border-ink/10 bg-white/50 text-ink/75 hover:border-hermes/60 dark:border-oat/10 dark:bg-oat/[0.02] dark:text-oat/75'
+                      ? 'border-gold bg-gold/15 text-ink dark:text-gold'
+                      : 'border-ink/10 bg-white/50 text-ink/75 hover:border-gold/60 dark:border-oat/10 dark:bg-oat/[0.02] dark:text-oat/75'
                   }`}
                 >
                   <span className="min-w-0">
                     <span className="block font-label text-[0.82rem] font-semibold">{day.short}</span>
                     <span className="mt-0.5 block text-[0.72rem] text-ink/65 dark:text-oat/55">{day.label}</span>
                   </span>
-                  <span className={`shrink-0 rounded-full px-2 py-1 font-label text-[0.65rem] tabular-nums ${active ? 'bg-hermes/20' : 'bg-ink/5 dark:bg-oat/10'}`}>
+                  <span className={`shrink-0 rounded-full px-2 py-1 font-label text-[0.65rem] tabular-nums ${active ? 'bg-gold/20' : 'bg-ink/5 dark:bg-oat/10'}`}>
                     {count}
                   </span>
                 </button>
@@ -162,7 +161,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
         </section>
       </div>
 
-      <section className="mb-8 rounded-2xl border border-ink/15 bg-white/60 p-5 dark:border-oat/15 dark:bg-pine-deep md:p-6">
+      <section className="mb-8 rounded-2xl border border-ink/15 bg-white/60 p-5 dark:border-oat/15 dark:bg-ink md:p-6">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
             <p className="font-label text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/65 dark:text-oat/55">
