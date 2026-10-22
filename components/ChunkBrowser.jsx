@@ -162,7 +162,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
         </section>
       </div>
 
-      <section className="mb-8 rounded-2xl border border-ink/15 bg-white/60 p-5 dark:border-oat/15 dark:bg-oat/[0.03] md:p-6">
+      <section className="mb-8 rounded-2xl border border-ink/15 bg-white/60 p-5 dark:border-oat/15 dark:bg-pine-deep md:p-6">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
             <p className="font-label text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/65 dark:text-oat/55">
@@ -172,7 +172,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
               Drag the brackets to the stretch you rode. Every camera in the arena comes with it.
             </p>
           </div>
-          <i className="ph ph-clock text-xl text-hermes-ink dark:text-hermes-light" aria-hidden="true" />
+          <i className="ph ph-clock text-xl text-hermes-ink dark:text-gold" aria-hidden="true" />
         </div>
 
         <TimeRangeSlider bounds={bounds} value={value} onChange={setWindow} />

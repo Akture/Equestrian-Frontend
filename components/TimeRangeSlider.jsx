@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { CHUNK_MINUTES, MAX_CHUNKS_PER_PURCHASE, minutesToClock } from '@/lib/rides';
 
 const MAX_MINUTES = MAX_CHUNKS_PER_PURCHASE * CHUNK_MINUTES;
-const GLOW = '0 0 2px rgb(var(--gold)), 0 0 12px rgb(var(--gold) / 0.7)';
+const GLOW = '0 0 2px rgb(var(--glow)), 0 0 12px rgb(var(--glow) / 0.7)';
 
 // One day of an arena as a line, with a start bracket and an end bracket.
 //   · both brackets move on the 15-minute grid
@@ -101,12 +101,12 @@ export default function TimeRangeSlider({ bounds, value, onChange }) {
         aria-label="Time range"
       >
         {/* the day as a line */}
-        <div data-line className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-pine-deep dark:bg-pine-lit" />
+        <div data-line className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-pine-lit" />
 
         {/* the selected window */}
         <div
           data-selection
-          className="pointer-events-none absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-gold"
+          className="pointer-events-none absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-hermes [--glow:var(--hermes)] dark:bg-gold dark:[--glow:var(--gold)]"
           style={{
             left: `${pct(value.start)}%`,
             width: `${pct(value.end) - pct(value.start)}%`,
@@ -135,7 +135,7 @@ export default function TimeRangeSlider({ bounds, value, onChange }) {
           >
             <span
               aria-hidden="true"
-              className={`absolute top-1/2 h-7 w-2.5 -translate-y-1/2 border-y-[3px] border-hermes transition-transform ${
+              className={`absolute top-1/2 h-7 w-2.5 -translate-y-1/2 border-y-[3px] border-hermes transition-transform dark:border-gold ${
                 thumb.which === 'start' ? 'border-l-[3px]' : 'border-r-[3px]'
               } ${dragging === thumb.which ? 'scale-110' : ''}`}
               style={thumb.which === 'start' ? { left: 'calc(50% - 1.5px)' } : { right: 'calc(50% - 1.5px)' }}
