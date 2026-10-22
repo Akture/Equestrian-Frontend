@@ -1,7 +1,7 @@
 import { pricingCopy } from '@/lib/copy';
 
-// Pre-launch pricing (10/13 review): a floor price for riders and the install
-// model for barns — no time tiers until the real rates are set at go-live.
+// Pre-launch pricing: a floor price for riders and the install model for
+// barns. No time tiers until the real rates are set at go-live.
 export default function PricingTeaser() {
   const cards = [pricingCopy.riders, pricingCopy.barns];
 

@@ -67,7 +67,7 @@ export default function MultiCamShowcase() {
                   className="relative rounded-lg overflow-hidden border border-oat/10"
                   style={{ aspectRatio: '16 / 9' }}
                 >
-                  {/* A real frame from the player's sample clips (10/13 review). */}
+                  {/* A real frame from the player's sample clips. */}
                   <video
                     src={`${previewVideos[f.id]}#t=4`}
                     poster={f.poster}

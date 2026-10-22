@@ -96,7 +96,7 @@ export default function HeroCarousel() {
         </div>
       ))}
 
-      {/* Arrows sit either side of the position markers (10/13 review). */}
+      {/* Arrows sit either side of the position markers. */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 z-20">
         <button
           onClick={() => go(i - 1)}

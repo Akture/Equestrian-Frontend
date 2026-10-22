@@ -19,14 +19,14 @@ export default function Header({ barn = null }) {
   const [open, setOpen] = useState(false);
   const [accountBarn, setAccountBarn] = useState(null);
 
-  // The nav follows sign-in, not the page (10/13 review): the same header on
-  // every page, with the account tools once someone is signed in.
+  // The nav follows sign-in, not the page: the same header on every page,
+  // with the account tools once someone is signed in.
   useEffect(() => {
     try {
       const account = JSON.parse(localStorage.getItem(MOCK_ACCOUNT_KEY) || 'null');
       if (account && typeof account.email === 'string') {
-        // An account made before a barn was removed still points at it; fall
-        // back to the demo barn and repair the stored record.
+        // A stored account can point at a barn that no longer exists; fall back
+        // to the demo barn and repair the stored record.
         const slug = getBarn(account.barn) ? account.barn : DEFAULT_BARN_SLUG;
         if (slug !== account.barn) {
           localStorage.setItem(MOCK_ACCOUNT_KEY, JSON.stringify({ ...account, barn: slug }));

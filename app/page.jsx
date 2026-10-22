@@ -13,8 +13,8 @@ import { barnFeatures, pricingCopy, riderFeatures, tickerLines } from '@/lib/cop
 import { barns } from '@/lib/barns';
 import { media } from '@/lib/media';
 
-// The barn carousel waits until there are at least three real, signed barns
-// (10/13 review). Mock barns never show on the homepage.
+// The barn carousel waits until there are at least three real, signed barns.
+// Mock barns never show on the homepage.
 const liveBarns = barns.filter((barn) => barn.live);
 
 export default function HomePage() {

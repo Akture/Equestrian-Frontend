@@ -105,7 +105,7 @@ export default function HowItWorksPage() {
           </div>
         </Section>
 
-        {/* The barn flow (10/13 review: this page covers barns as well as riders) */}
+        {/* The barn flow. This page covers barns as well as riders. */}
         <Section tone="pine" className="py-20">
           <div className="max-w-7xl mx-auto px-6 md:px-12">
             <SectionHeading eyebrow="For barns" heading="How to get started" align="left" onDark className="mb-14" />

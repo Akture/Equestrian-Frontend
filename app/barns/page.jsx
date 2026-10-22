@@ -9,7 +9,7 @@ import { media } from '@/lib/media';
 
 export const metadata = { title: 'Partner barns — Akture Equestrian' };
 
-// Mock barns stay off the public page until real barns are signed (10/13 review).
+// Mock barns stay off the public page until real barns are signed.
 const liveBarns = barns.filter((barn) => barn.live);
 
 export default function BarnsPage() {
