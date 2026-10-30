@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { previewVideos } from '@/lib/media';
 import {
   CHUNK_MINUTES,
+  MAX_CHUNKS_PER_PURCHASE,
   PURCHASE_WINDOW_HOURS,
   folderNames,
   hoursForDay,
@@ -53,6 +55,28 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
     return { start: first.startMin, end: first.startMin + (second ? 2 : 1) * CHUNK_MINUTES };
   }, [all, byStart, bounds.start, bounds.end]);
   const value = window || defaultWindow;
+
+  // A press on a segment in the list moves the same window the handles move: a
+  // neighbour joins the run, an end segment leaves it, anything else starts a
+  // new run there. Past an hour the run slides to keep the pressed segment.
+  function pick(chunk) {
+    const { startMin: s, endMin: e } = chunk;
+    const max = MAX_CHUNKS_PER_PURCHASE * CHUNK_MINUTES;
+    let next;
+    if (s >= value.start && e <= value.end) {
+      if (value.end - value.start === CHUNK_MINUTES) return;
+      if (s === value.start) next = { start: e, end: value.end };
+      else if (e === value.end) next = { start: value.start, end: s };
+      else return;
+    } else if (e === value.start) {
+      next = { start: s, end: Math.min(value.end, s + max) };
+    } else if (s === value.end) {
+      next = { start: Math.max(value.start, e - max), end: e };
+    } else {
+      next = { start: s, end: e };
+    }
+    setWindow(next);
+  }
 
   const selectedChunks = [];
   let missingSlot = false;
@@ -168,7 +192,7 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
               Choose your time
             </p>
             <p className="mt-1 text-[0.8rem] text-ink/65 dark:text-oat/55">
-              Drag the brackets to the stretch you rode. Every camera in the arena comes with it.
+              Drag the handles to select your time, or drag the middle to move the whole window. Every camera in the arena comes with it.
             </p>
           </div>
           <i className="ph ph-clock text-xl text-hermes-ink dark:text-gold" aria-hidden="true" />
@@ -176,6 +200,78 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
 
         <TimeRangeSlider bounds={bounds} value={value} onChange={setWindow} />
       </section>
+
+      <div className="mb-8">
+        <p className="mb-4 font-label text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/65 dark:text-oat/55">
+          Or pick segments from the day
+        </p>
+        {timeOfDaySections.map((section) => {
+          const sectionChunks = all.filter((chunk) => section.contains(chunk.startMin));
+          return (
+            <details
+              key={section.label}
+              open={section.contains(value.start)}
+              className="mb-4 rounded-2xl border border-ink/15 bg-white/40 dark:border-oat/15 dark:bg-ink"
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-display text-xl marker:hidden">
+                <span>{section.label}</span>
+                <span className="inline-flex items-center gap-3 font-label text-[0.72rem] text-ink/65 dark:text-oat/55">
+                  {sectionChunks.length} {sectionChunks.length === 1 ? 'segment' : 'segments'}
+                  <i className="ph-bold ph-caret-down" aria-hidden="true" />
+                </span>
+              </summary>
+              {sectionChunks.length ? (
+                <ol className="grid grid-cols-1 gap-4 border-t border-ink/10 p-4 dark:border-oat/10 sm:grid-cols-2 xl:grid-cols-3">
+                  {sectionChunks.map((chunk) => {
+                    const isOwned = owned.has(chunk.id);
+                    const isSelected = chunk.startMin >= value.start && chunk.endMin <= value.end;
+                    const title = segmentTitle(barnName, chunk.arenaName, chunk);
+                    const body = <ChunkBody chunk={chunk} title={title} />;
+                    return (
+                      <li key={chunk.id}>
+                        {isOwned ? (
+                          <Link
+                            href={`/${barnSlug}/${chunk.arena}/watch/${chunk.id}`}
+                            title={title}
+                            className="block h-full rounded-2xl border border-pine-lit/50 bg-pine-lit/10 p-4 transition-colors hover:border-pine-lit"
+                          >
+                            {body}
+                            <span className="mt-3 inline-flex items-center gap-1.5 font-label text-[0.72rem] font-semibold text-pine dark:text-pine-lit">
+                              Bought · Watch <i className="ph-bold ph-arrow-right text-xs" />
+                            </span>
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => pick(chunk)}
+                            aria-pressed={isSelected}
+                            title={title}
+                            className={`block h-full w-full rounded-2xl border p-4 text-left transition-colors ${
+                              isSelected
+                                ? 'border-hermes bg-hermes/15'
+                                : 'border-ink/15 bg-white/60 hover:border-hermes/60 dark:border-oat/15 dark:bg-oat/[0.03]'
+                            }`}
+                          >
+                            {body}
+                            <span className={`mt-3 inline-flex items-center gap-1.5 font-label text-[0.72rem] font-semibold ${isSelected ? 'text-hermes-ink dark:text-hermes-light' : 'text-ink/65 dark:text-oat/55'}`}>
+                              <i className={`${isSelected ? 'ph-fill ph-check-circle' : 'ph ph-circle'} text-sm`} />
+                              {isSelected ? 'Selected' : 'Select segment'}
+                            </span>
+                          </button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ol>
+              ) : (
+                <p className="border-t border-ink/10 px-5 py-4 text-[0.82rem] text-ink/65 dark:border-oat/10 dark:text-oat/55">
+                  No {section.label.toLowerCase()} footage for sale on this day.
+                </p>
+              )}
+            </details>
+          );
+        })}
+      </div>
 
       <div
         className={`sticky bottom-4 mt-8 rounded-2xl border bg-ink p-4 text-oat shadow-rail transition-all md:p-5 ${
@@ -231,3 +327,36 @@ export default function ChunkBrowser({ barnSlug, barnName, dayOptions, chunksByD
   );
 }
 
+function segmentTitle(barnName, arenaName, chunk) {
+  const date = new Date(`${chunk.iso}T12:00:00`).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  return `${barnName} (${arenaName}) - ${date} at ${chunk.start} - ${chunk.end} (${chunk.durationMinutes} min)`;
+}
+
+function ChunkBody({ chunk, title }) {
+  const date = new Date(`${chunk.iso}T12:00:00`).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  return (
+    <>
+      <p className="break-words font-display text-[1.02rem] leading-snug text-ink dark:text-oat" aria-label={title}>
+        {chunk.label || 'Recorded footage'} · {chunk.arenaName}
+      </p>
+      <p className="mt-2 text-[0.78rem] leading-snug text-ink/65 dark:text-oat/55">
+        {date} · {chunk.start}–{chunk.end}
+      </p>
+    </>
+  );
+}
+
+const timeOfDaySections = [
+  { label: 'Morning', contains: (minute) => minute < 12 * 60 },
+  { label: 'Afternoon', contains: (minute) => minute >= 12 * 60 && minute < 17 * 60 },
+  { label: 'Evening', contains: (minute) => minute >= 17 * 60 },
+];

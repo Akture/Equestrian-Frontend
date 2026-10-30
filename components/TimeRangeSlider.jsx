@@ -6,14 +6,16 @@ import { CHUNK_MINUTES, MAX_CHUNKS_PER_PURCHASE, minutesToClock } from '@/lib/ri
 const MAX_MINUTES = MAX_CHUNKS_PER_PURCHASE * CHUNK_MINUTES;
 const GLOW = '0 0 2px rgb(var(--glow)), 0 0 12px rgb(var(--glow) / 0.7)';
 
-// One day of an arena as a line, with a start bracket and an end bracket.
-//   · both brackets move on the 15-minute grid
-//   · the brackets stop 15 minutes apart and never cross
-//   · past 60 minutes apart, the bracket being dragged brings the other along
-//   · a press on the open line picks up the nearer bracket
+// One day of an arena as a line, with a start handle and an end handle.
+//   · both handles move on the 15-minute grid
+//   · the handles stop 15 minutes apart and never cross
+//   · past 60 minutes apart, the handle being dragged brings the other along
+//   · the span between them drags as one piece, keeping its length
+//   · a press on the open line picks up the nearer handle
 export default function TimeRangeSlider({ bounds, value, onChange }) {
   const trackRef = useRef(null);
-  const [dragging, setDragging] = useState(null);
+  const grabOffset = useRef(0); // minutes from the window's start to where it was grabbed
+  const [dragging, setDragging] = useState(null); // 'start' | 'end' | 'window'
   const span = bounds.end - bounds.start;
 
   const pct = (minute) => ((minute - bounds.start) / span) * 100;
@@ -37,6 +39,13 @@ export default function TimeRangeSlider({ bounds, value, onChange }) {
     if (start !== value.start || end !== value.end) onChange({ start, end });
   }
 
+  function moveWindow(clientX) {
+    const minutes = value.end - value.start;
+    let start = snap(minuteAt(clientX) - grabOffset.current);
+    start = Math.max(bounds.start, Math.min(start, bounds.end - minutes));
+    if (start !== value.start) onChange({ start, end: start + minutes });
+  }
+
   function beginDrag(which) {
     return (event) => {
       event.preventDefault();
@@ -45,10 +54,18 @@ export default function TimeRangeSlider({ bounds, value, onChange }) {
     };
   }
 
+  function beginWindowDrag(event) {
+    event.preventDefault();
+    capture(event);
+    grabOffset.current = minuteAt(event.clientX) - value.start;
+    setDragging('window');
+  }
+
   function onPointerMove(event) {
     if (!dragging) return;
     if (dragging === 'start') moveStart(event.clientX);
-    else moveEnd(event.clientX);
+    else if (dragging === 'end') moveEnd(event.clientX);
+    else moveWindow(event.clientX);
   }
 
   function endDrag(event) {
@@ -61,9 +78,9 @@ export default function TimeRangeSlider({ bounds, value, onChange }) {
     setDragging(null);
   }
 
-  // A press on the open line picks up whichever bracket is nearer.
+  // A press on the open line picks up whichever handle is nearer.
   function onTrackPointerDown(event) {
-    if (event.target.closest('[data-thumb]')) return;
+    if (event.target.closest('[data-thumb], [data-selection]')) return;
     event.preventDefault();
     capture(event);
     const minute = minuteAt(event.clientX);
@@ -103,18 +120,25 @@ export default function TimeRangeSlider({ bounds, value, onChange }) {
         {/* the day as a line */}
         <div data-line className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-pine-lit" />
 
-        {/* the selected window */}
+        {/* the selected window: grab the middle to move the whole thing */}
         <div
           data-selection
-          className="pointer-events-none absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-hermes [--glow:var(--hermes)] dark:bg-gold dark:[--glow:var(--gold)]"
-          style={{
-            left: `${pct(value.start)}%`,
-            width: `${pct(value.end) - pct(value.start)}%`,
-            boxShadow: GLOW,
-          }}
-        />
+          onPointerDown={beginWindowDrag}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          className={`absolute top-1/2 z-[5] flex h-8 -translate-y-1/2 items-center touch-none ${
+            dragging === 'window' ? 'cursor-grabbing' : 'cursor-grab'
+          }`}
+          style={{ left: `${pct(value.start)}%`, width: `${pct(value.end) - pct(value.start)}%` }}
+        >
+          <span
+            className="block h-1.5 w-full rounded-full bg-hermes [--glow:var(--hermes)] dark:bg-gold dark:[--glow:var(--gold)]"
+            style={{ boxShadow: GLOW }}
+          />
+        </div>
 
-        {/* brackets */}
+        {/* handles */}
         {[
           { which: 'start', minute: value.start, label: 'Start time' },
           { which: 'end', minute: value.end, label: 'End time' },
@@ -128,18 +152,21 @@ export default function TimeRangeSlider({ bounds, value, onChange }) {
             onPointerUp={endDrag}
             onPointerCancel={endDrag}
             aria-label={`${thumb.label}: ${minutesToClock(thumb.minute)}`}
-            className={`absolute top-1/2 z-10 h-12 w-8 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none ${
-              dragging === thumb.which ? 'cursor-grabbing' : ''
+            className={`absolute top-1/2 z-10 flex h-12 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center touch-none ${
+              dragging === thumb.which ? 'cursor-grabbing' : 'cursor-ew-resize'
             }`}
             style={{ left: `${pct(thumb.minute)}%` }}
           >
             <span
               aria-hidden="true"
-              className={`absolute top-1/2 h-7 w-2.5 -translate-y-1/2 border-y-[3px] border-hermes transition-transform dark:border-gold ${
-                thumb.which === 'start' ? 'border-l-[3px]' : 'border-r-[3px]'
-              } ${dragging === thumb.which ? 'scale-110' : ''}`}
-              style={thumb.which === 'start' ? { left: 'calc(50% - 1.5px)' } : { right: 'calc(50% - 1.5px)' }}
-            />
+              className={`flex h-9 w-5 items-center justify-center gap-[3px] rounded-md bg-hermes shadow-sm transition-transform dark:bg-gold ${
+                dragging === thumb.which ? 'scale-110' : ''
+              }`}
+            >
+              <span className="block h-4 w-px bg-oat/80 dark:bg-ink/70" />
+              <span className="block h-4 w-px bg-oat/80 dark:bg-ink/70" />
+              <span className="block h-4 w-px bg-oat/80 dark:bg-ink/70" />
+            </span>
           </button>
         ))}
       </div>
@@ -160,7 +187,7 @@ export default function TimeRangeSlider({ bounds, value, onChange }) {
   );
 }
 
-// Capture keeps the drag alive when the pointer leaves the bracket. It throws for
+// Capture keeps the drag alive when the pointer leaves the handle. It throws for
 // a pointer the browser is not tracking, which is harmless — the drag still works
 // while the pointer stays over the line.
 function capture(event) {
