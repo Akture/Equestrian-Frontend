@@ -10,7 +10,10 @@ import { readMockPurchases } from '@/lib/purchaseStore';
 // My Videos. Every purchase is a run of 15-minute folders, three angle files in
 // each. Rename, delete and combine work for real in this browser's storage so
 // the flow can be walked; downloads are packaged as ZIP archives in the browser.
+// A click on a date heading folds that day away, and the search box at the top
+// narrows the days to the one typed.
 const KEY = 'aq-mock-my-videos';
+const COLLAPSED_KEY = 'aq-my-videos-collapsed';
 
 function formatPurchaseDate(iso, fallback) {
   if (!iso) return fallback;
@@ -36,6 +39,38 @@ function save(state) {
     /* private browsing */
   }
 }
+function loadCollapsed() {
+  try {
+    return JSON.parse(localStorage.getItem(COLLAPSED_KEY) || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+function saveCollapsed(keys) {
+  try {
+    localStorage.setItem(COLLAPSED_KEY, JSON.stringify(keys));
+  } catch (e) {
+    /* private browsing */
+  }
+}
+
+// Every word a rider might type to find a day: the heading's words, the short
+// month, the day and year on their own, and the numeric and ISO forms. A query
+// matches when each of its words starts one of these.
+function dayTokens(group) {
+  const tokens = String(group.label).toLowerCase().split(/[\s,]+/).filter(Boolean);
+  const [year, month, day] = String(group.key).split('-').map(Number);
+  if (year && month && day) {
+    const short = new Date(year, month - 1, day).toLocaleDateString('en-US', { month: 'short' }).toLowerCase();
+    tokens.push(short, `${month}/${day}`, `${month}/${day}/${year}`, group.key, String(day), String(year));
+  }
+  return tokens;
+}
+function matchesDay(group, query) {
+  const want = query.toLowerCase().split(/[\s,]+/).filter(Boolean);
+  const have = dayTokens(group);
+  return want.every((w) => have.some((h) => h.startsWith(w)));
+}
 
 export default function MyVideosBoard({ barnSlug, folders }) {
   // state = { names: {id: displayName}, fileNames: {id: {angleId: label}}, deleted: [id], combined: [{...}] }
@@ -46,10 +81,13 @@ export default function MyVideosBoard({ barnSlug, folders }) {
   const [note, setNote] = useState('');
   const [purchasedFolders, setPurchasedFolders] = useState([]);
   const [purchaseLoadError, setPurchaseLoadError] = useState('');
+  const [collapsed, setCollapsed] = useState([]); // date keys folded away
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     const s = load();
     if (s) setState({ names: {}, fileNames: {}, deleted: [], combined: [], ...s });
+    setCollapsed(loadCollapsed());
     try {
       setPurchasedFolders(readMockPurchases().filter((purchase) => purchase.barn === barnSlug));
     } catch (error) {
@@ -89,6 +127,18 @@ export default function MyVideosBoard({ barnSlug, folders }) {
       }))
       .sort((a, b) => b.key.localeCompare(a.key));
   }, [live]);
+
+  const searching = query.trim().length > 0;
+  const shown = useMemo(() => {
+    const q = query.trim();
+    return q ? groups.filter((g) => matchesDay(g, q)) : groups;
+  }, [groups, query]);
+
+  function toggleGroup(key) {
+    const next = collapsed.includes(key) ? collapsed.filter((k) => k !== key) : [...collapsed, key];
+    setCollapsed(next);
+    saveCollapsed(next);
+  }
 
   const displayName = (f) => state.names[f.id] || f.names.display;
   const fileLabel = (f, a) => state.fileNames[f.id]?.[a.id] || a.label;
@@ -219,6 +269,34 @@ export default function MyVideosBoard({ barnSlug, folders }) {
       )}
 
       {/* purchases ------------------------------------------------------ */}
+      {groups.length > 1 && (
+        <div className="mb-8 flex flex-wrap items-center gap-3">
+          <label className="relative min-w-[16rem] max-w-md flex-1">
+            <span className="sr-only">Search by date</span>
+            <i className="ph-bold ph-magnifying-glass pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink/50 dark:text-oat/50" aria-hidden="true" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by date, like Oct 21"
+              className="w-full rounded-full border border-ink/15 bg-white/50 py-2.5 pl-10 pr-4 text-[0.9rem] text-ink placeholder:text-ink/45 focus:border-hermes focus:outline-none dark:border-oat/20 dark:bg-oat/[0.03] dark:text-oat dark:placeholder:text-oat/45"
+            />
+          </label>
+          <span className="font-label text-[0.72rem] text-ink/65 dark:text-oat/55" aria-live="polite">
+            {searching ? `${shown.length} of ${groups.length} days` : `${groups.length} days`}
+          </span>
+          {searching && (
+            <button type="button" onClick={() => setQuery('')} className="font-label text-[0.72rem] font-semibold text-hermes-ink hover:underline dark:text-hermes-light">
+              Clear
+            </button>
+          )}
+        </div>
+      )}
+      {searching && shown.length === 0 && (
+        <p className="mb-12 rounded-2xl border border-dashed border-ink/20 p-10 text-center text-ink/65 dark:border-oat/20 dark:text-oat/55">
+          No days match “{query.trim()}”.
+        </p>
+      )}
       {groups.length === 0 && (
         <div className="rounded-2xl border border-dashed border-ink/20 dark:border-oat/20 p-16 text-center">
           <p className="font-display text-xl mb-3">Your purchases will show here</p>
@@ -226,12 +304,26 @@ export default function MyVideosBoard({ barnSlug, folders }) {
         </div>
       )}
 
-      {groups.map((g) => {
+      {shown.map((g) => {
         const first = g.items[0];
+        const open = searching || !collapsed.includes(g.key);
         return (
           <section key={g.key} className="mb-12">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-5 border-b border-ink/15 dark:border-oat/15 pb-4">
-              <h2 className="font-display text-xl md:text-2xl">{g.label}</h2>
+              <h2 className="font-display text-xl md:text-2xl">
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(g.key)}
+                  aria-expanded={open}
+                  className="inline-flex items-center gap-3 text-left transition-colors hover:text-hermes-ink dark:hover:text-hermes-light"
+                >
+                  <i className={`ph-bold ph-caret-down text-sm text-ink/50 transition-transform dark:text-oat/50 ${open ? '' : '-rotate-90'}`} aria-hidden="true" />
+                  {g.label}{' '}
+                  <span className="font-label text-[0.72rem] font-normal text-ink/65 dark:text-oat/55">
+                    {g.items.length} {g.items.length === 1 ? 'folder' : 'folders'}
+                  </span>
+                </button>
+              </h2>
               <Link
                 href={`/${barnSlug}/${first.arena}/watch/${first.id}?autoplay=1&queue=${encodeURIComponent(g.items.map((item) => item.id).join(','))}`}
                 className="inline-flex shrink-0 items-center gap-2 btn-hermes rounded-full px-5 py-2.5 font-label text-[0.82rem] font-semibold"
@@ -249,6 +341,7 @@ export default function MyVideosBoard({ barnSlug, folders }) {
               </VideoDownloadButton>
             </div>
 
+            {open && (
             <ul className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               {g.items.map((f) => {
                 const isSel = selected.includes(f.id);
@@ -361,6 +454,7 @@ export default function MyVideosBoard({ barnSlug, folders }) {
                 );
               })}
             </ul>
+            )}
           </section>
         );
       })}
