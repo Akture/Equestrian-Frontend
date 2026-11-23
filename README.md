@@ -24,6 +24,7 @@ npm run build    # runs the guardrail first, then next build — same on Vercel
 | `/faq` | Eleven questions, including who can see footage and how long it stays |
 | `/barns` | The barns we are in, and how a barn comes online |
 | `/access` | Create an account with email/password, log in, or use the mock Google sign-in |
+| `/select-barn` | **The barn picker.** Every barn with its details; choosing one opens its purchase page |
 | `/[barn]` | **The purchase page.** All available 15-minute footage segments from the barn's arena |
 | `/[barn]/[arena]` | Redirects to the barn purchase page |
 | `/[barn]/[arena]/watch/[folder]` | **The player.** Purchased folders and the demo multi-camera preview |
@@ -31,8 +32,8 @@ npm run build    # runs the guardrail first, then next build — same on Vercel
 | `/[barn]/profile` | The mock account, and log out |
 | `/[barn]/support` | A form that opens a real email to `contact@akture.video` |
 
-Create an account or use the mock Google sign-in on `/access` to open the Demo Barn
-(`/demo`). The account is stored in this browser only; there is no production authentication
+Create an account or use the mock Google sign-in on `/access` to reach the barn picker
+(`/select-barn`). The account is stored in this browser only; there is no production authentication
 provider connected yet. The Demo Barn carries the worked example: mock footage, three camera angles, and
 seeded purchases in My Videos.
 Seeded purchased folders use local sample MP4s from `public/videos/` to exercise playback and
@@ -41,7 +42,7 @@ downloads; they stand in for the signed camera-angle URLs supplied by a producti
 ## The product, as built here
 
 - **Access.** The barn code is not required. Email/password account creation, login, and Google
-  sign-in are mocked in the browser and redirect to the Demo Barn. Production OAuth and account
+  sign-in are mocked in the browser and land on the barn picker (`/select-barn`). Production OAuth and account
   services still need to be connected.
 - **Buying.** Footage is sold in **15-minute chunks**, listed for **48 hours** after recording.
   **One arena per barn:** at launch Akture installs in a single arena at each location, so the

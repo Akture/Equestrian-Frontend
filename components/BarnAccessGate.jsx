@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { MOCK_ACCOUNT_KEY } from '@/lib/access';
+import { getBarn } from '@/lib/barns';
 
 export default function BarnAccessGate({ children }) {
   const pathname = usePathname();
@@ -14,6 +15,12 @@ export default function BarnAccessGate({ children }) {
     try {
       const account = JSON.parse(localStorage.getItem(MOCK_ACCOUNT_KEY) || 'null');
       if (account && typeof account.email === 'string') {
+        // Choosing a barn here is what sets "my barn": My Videos, Support and
+        // the header follow the last barn visited.
+        const slug = pathname.split('/').filter(Boolean)[0];
+        if (slug && getBarn(slug) && account.barn !== slug) {
+          localStorage.setItem(MOCK_ACCOUNT_KEY, JSON.stringify({ ...account, barn: slug }));
+        }
         setStatus('ready');
       } else {
         router.replace('/access');
