@@ -8,6 +8,10 @@ import VideoDownloadButton from './VideoDownloadButton';
 
 const SPEEDS = [0.25, 0.5, 1, 1.5, 2];
 
+// Timestamps are parked for now: the Add timestamp control and the pins on the
+// timeline are hidden. Flip this back on to bring both back.
+const SHOW_TIMESTAMPS = false;
+
 // One shared transport, one playhead, one clock. No per-camera timeline and no
 // per-camera play button — that is the whole reason three feeds can be trusted
 // to be the same moment.
@@ -488,20 +492,21 @@ export default function MultiCamPlayer({
             <div className="h-full bg-brass/60" style={{ width: `${pct * 100}%` }} />
           </div>
 
-          {allMarks.map((m, i) => (
-            <span
-              key={`pin-${i}`}
-              title={m.label}
-              className={`absolute top-0 w-[3px] h-5 rounded-full pointer-events-none ${
-                m.kind === 'mine' ? 'bg-hermes' : 'bg-brass'
-              }`}
-              style={{
-                left: `${(dayTimeline
-                  ? (timelineOffset + m.at * activeTimelineDuration) / timelineDuration
-                  : m.at) * 100}%`,
-              }}
-            />
-          ))}
+          {SHOW_TIMESTAMPS &&
+            allMarks.map((m, i) => (
+              <span
+                key={`pin-${i}`}
+                title={m.label}
+                className={`absolute top-0 w-[3px] h-5 rounded-full pointer-events-none ${
+                  m.kind === 'mine' ? 'bg-hermes' : 'bg-brass'
+                }`}
+                style={{
+                  left: `${(dayTimeline
+                    ? (timelineOffset + m.at * activeTimelineDuration) / timelineDuration
+                    : m.at) * 100}%`,
+                }}
+              />
+            ))}
 
           <span
             className="absolute top-0 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-hermes border-2 border-oat pointer-events-none"
@@ -561,14 +566,16 @@ export default function MultiCamPlayer({
             ))}
           </select>
 
-          <button
-            type="button"
-            onClick={addMark}
-            className="px-3 py-1.5 rounded-full border border-oat/15 text-oat/70 hover:border-hermes hover:text-hermes-light font-label text-[0.72rem] transition-colors"
-          >
-            <i className="ph-bold ph-map-pin mr-1.5" />
-            Add timestamp
-          </button>
+          {SHOW_TIMESTAMPS && (
+            <button
+              type="button"
+              onClick={addMark}
+              className="px-3 py-1.5 rounded-full border border-oat/15 text-oat/70 hover:border-hermes hover:text-hermes-light font-label text-[0.72rem] transition-colors"
+            >
+              <i className="ph-bold ph-map-pin mr-1.5" />
+              Add timestamp
+            </button>
+          )}
 
           <VideoDownloadButton
             folder={session}

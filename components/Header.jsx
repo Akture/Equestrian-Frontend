@@ -41,6 +41,7 @@ export default function Header({ barn = null }) {
   const signedInBarn = accountBarn || barn?.slug || null;
   const links = signedInBarn
     ? [
+        { label: 'Barns', href: '/select-barn' },
         { label: 'My Videos', href: `/${signedInBarn}/my-videos` },
         { label: 'Support', href: `/${signedInBarn}/support` },
       ]

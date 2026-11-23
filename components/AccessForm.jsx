@@ -40,7 +40,7 @@ export default function AccessForm() {
       try {
         const account = { email: email.trim(), barn: DEFAULT_BARN_SLUG, provider: 'email' };
         localStorage.setItem(MOCK_ACCOUNT_KEY, JSON.stringify(account));
-        router.push(`/${DEFAULT_BARN_SLUG}`);
+        router.push('/select-barn');
       } catch {
         setError('Your account could not be saved in this browser. Check your browser storage settings and try again.');
       }
@@ -57,7 +57,7 @@ export default function AccessForm() {
       setError('That email does not match the account in this browser.');
       return;
     }
-    router.push(`/${DEFAULT_BARN_SLUG}`);
+    router.push('/select-barn');
   }
 
   function onGoogleSignIn() {
@@ -69,7 +69,7 @@ export default function AccessForm() {
         provider: 'google',
       };
       localStorage.setItem(MOCK_ACCOUNT_KEY, JSON.stringify(account));
-      router.push(`/${DEFAULT_BARN_SLUG}`);
+      router.push('/select-barn');
     } catch {
       setError('Google sign-in could not be saved in this browser. Check your browser storage settings and try again.');
     }
@@ -147,7 +147,7 @@ export default function AccessForm() {
           type="submit"
           className="w-full btn-hermes rounded-full py-3.5 font-label text-sm font-semibold shadow-hermes-md"
         >
-          {mode === 'create' ? 'Create account and open my barn' : 'Log in'}
+          {mode === 'create' ? 'Create account and choose a barn' : 'Log in'}
         </button>
       </form>
 
