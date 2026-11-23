@@ -2,10 +2,11 @@ import Link from 'next/link';
 import Ticker from '@/components/Ticker';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import DemoRibbon from '@/components/DemoRibbon';
 import { barns } from '@/lib/barns';
 import { tickerLines } from '@/lib/copy';
 
-export const metadata = { title: 'Choose your barn — Akture Equestrian' };
+export const metadata = { title: 'Choose Location — Akture Equestrian' };
 
 // The first page after signing in: every barn we film, with the details a rider
 // needs to recognise their own. Picking one opens that barn's purchase page.
@@ -23,12 +24,13 @@ export default function SelectBarnPage() {
               Your barns
             </p>
             <h1 className="font-display text-[2.2rem] md:text-[2.8rem] leading-tight">
-              Choose your barn
+              Choose Location
             </h1>
             <p className="mt-4 text-ink/65 dark:text-oat/60 leading-relaxed">
               Footage is sold barn by barn. Pick the barn you rode at to see the times for sale
               in its arena, and the footage you already own.
             </p>
+            <DemoRibbon className="mt-6" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
