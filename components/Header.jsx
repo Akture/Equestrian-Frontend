@@ -103,7 +103,7 @@ export default function Header({ barn = null }) {
             </Link>
 
             <Link
-              href={signedInBarn ? `/${signedInBarn}` : '/access'}
+              href={signedInBarn ? '/select-barn' : '/access'}
               className="btn-hermes px-5 py-2.5 rounded-full font-label text-[0.95rem] font-semibold whitespace-nowrap shadow-hermes-sm"
             >
               Purchase footage
@@ -140,7 +140,7 @@ export default function Header({ barn = null }) {
             </div>
 
             <Link
-              href={signedInBarn ? `/${signedInBarn}` : '/access'}
+              href={signedInBarn ? '/select-barn' : '/access'}
               onClick={() => setOpen(false)}
               className="btn-hermes px-5 py-3 rounded-full font-label text-sm font-semibold text-center"
             >
